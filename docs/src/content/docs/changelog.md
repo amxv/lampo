@@ -3,10 +3,10 @@ title: Changelog
 description: "Release notes for this CLI."
 order: 99
 category: Distribution
-summary: Placeholder changelog for projects created from this template.
+summary: Planned release notes; no versions have been published yet.
 ---
 
-This page is a starter changelog for projects created from this template. Replace the placeholder entries with real release notes when you cut versions.
+Lampo has not shipped its first release. Replace this placeholder with real, dated release notes when the preview CLI is ready.
 
 ## 0.1.0 - YYYY-MM-DD
 

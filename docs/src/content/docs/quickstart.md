@@ -1,37 +1,21 @@
 ---
 title: Quickstart
-description: Install dependencies, run the starter CLI, and start the bundled ZueDocs site.
+description: Clone Lampo, run the CLI scaffold, and start the documentation site.
 order: 1
 category: Start
-summary: The fastest path from a fresh clone to a working CLI and local docs site.
+summary: Work on the Lampo scaffold locally while the preview engine is in development.
 ---
 
-## Clone and initialize
+Lampo is in early development. Its LaTeX preview server and PDF export are not available yet; the `hello` command below is a temporary starter example.
 
-For a brand-new CLI, create the repository from the directory where the clone
-should be created:
-
-```bash
-gh repo create acme/pluck \
-  --public \
-  --template amxv/go-cli-template \
-  --clone
-```
-
-Then run bootstrap from the new repository root:
+## Clone the repository
 
 ```bash
-cd pluck
-make bootstrap BOOTSTRAP_ARGS='--cli-name pluck --github-owner acme \
-  --github-repo pluck --npm-package @acme/pluck --license Apache-2.0'
+git clone https://github.com/amxv/lampo.git
+cd lampo
 ```
 
-The bootstrap command runs from the repository root and never reclones. Omit
-`--public` in the GitHub command for the safe private default. Use public
-visibility for the normal anonymous npm installation path.
-
-For an existing clone, run `make bootstrap` with the identity options shown in the
-customization guide. No manual `mycli` rename sweep is required.
+Project identity is already initialized. No bootstrap step is needed.
 
 ## Install dependencies
 
@@ -51,8 +35,8 @@ Use the make targets to validate and build the starter command:
 ```bash
 make check
 make build
-./dist/mycli --help
-./dist/mycli hello
+./dist/lampo --help
+./dist/lampo hello
 ```
 
 The sample command is intentionally small so it is easy to replace.

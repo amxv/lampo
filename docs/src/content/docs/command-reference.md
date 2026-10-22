@@ -9,10 +9,10 @@ summary: Starter commands, make targets, and docs commands in one scannable page
 ## Starter command
 
 ```bash
-mycli --help
-mycli hello
-mycli hello <name>
-mycli --version
+lampo --help
+lampo hello
+lampo hello <name>
+lampo --version
 ```
 
 Replace these commands with behavior specific to your project.
@@ -60,11 +60,11 @@ make docs-preview
 ## Main files
 
 ```bash
-cmd/mycli/main.go             # CLI entrypoint
+cmd/lampo/main.go             # CLI entrypoint
 internal/app/app.go           # command parser and handlers
 internal/app/app_test.go      # starter tests
 internal/buildinfo/buildinfo.go # version plumbing
-bin/mycli.js                  # npm executable shim
+bin/lampo.js                  # npm executable shim
 scripts/postinstall.js        # release binary installer
 .github/workflows/release.yml # release workflow
 docs/src/content/docs/*.md    # docs content

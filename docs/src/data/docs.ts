@@ -1,27 +1,27 @@
 export const siteConfig = {
-  name: "mycli",
-  strapline: "A Go CLI shipped through npm",
+  name: "Lampo",
+  strapline: "Live LaTeX, without the wait",
   description:
-    "Documentation for mycli, a starter Go command-line tool template with npm distribution, GitHub release automation, and an embedded ZueDocs-powered docs site.",
-  repoUrl: "https://github.com/amxv/go-cli-template",
-  accentColor: "#0369a1",
-  accentColorDark: "#38bdf8",
+    "Lampo is an upcoming lightweight CLI for instant LaTeX previews in the browser and PDF export, designed for agent-driven workflows.",
+  repoUrl: "https://github.com/amxv/lampo",
+  accentColor: "#b45309",
+  accentColorDark: "#fbbf24",
   footerSections: [
     {
-      title: "mycli",
+      title: "Lampo",
       text:
-        "A starter Go CLI template with native binaries, npm installation, release automation, and docs included from day one."
+        "A small, fast live-preview companion for LaTeX projects. Currently in development."
     },
     {
-      title: "What this site covers",
+      title: "Project status",
       text:
-        "Installation, local development, command customization, release workflow, npm packaging, and docs site maintenance."
+        "The repository and distribution infrastructure are ready; the preview engine and PDF export are not implemented yet."
     },
     {
       title: "Repository",
       linkPrefix: "Source: ",
-      linkHref: "https://github.com/amxv/go-cli-template",
-      linkLabel: "github.com/amxv/go-cli-template"
+      linkHref: "https://github.com/amxv/lampo",
+      linkLabel: "github.com/amxv/lampo"
     }
   ]
 } as const;

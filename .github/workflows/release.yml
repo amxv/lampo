@@ -8,9 +8,9 @@ on:
 env:
   GO_VERSION: "1.26"
   NODE_VERSION: "22"
-  CLI_BINARY: "mycli"
-  CLI_ENTRYPOINT: "mycli"
-  CLI_MODULE: "github.com/amxv/go-cli-template"
+  CLI_BINARY: "lampo"
+  CLI_ENTRYPOINT: "lampo"
+  CLI_MODULE: "github.com/amxv/lampo"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:

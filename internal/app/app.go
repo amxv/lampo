@@ -5,10 +5,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/amxv/go-cli-template/internal/buildinfo"
+	"github.com/amxv/lampo/internal/buildinfo"
 )
 
-const commandName = "mycli"
+const commandName = "lampo"
 
 var version = buildinfo.CurrentVersion()
 
@@ -59,32 +59,32 @@ func isHelpArg(v string) bool {
 
 func printRootHelp(w io.Writer) {
 	writeLines(w,
-		"mycli - Go CLI template",
+		"lampo - live LaTeX preview CLI (starter scaffold)",
 		"",
 		"Usage:",
-		"  mycli [--version]",
-		"  mycli <command> [arguments]",
+		"  lampo [--version]",
+		"  lampo <command> [arguments]",
 		"",
 		"Commands:",
 		"  hello [name]    print a greeting",
 		"",
 		"Examples:",
-		"  mycli --version",
-		"  mycli hello",
-		"  mycli hello agent",
+		"  lampo --version",
+		"  lampo hello",
+		"  lampo hello agent",
 	)
 }
 
 func printHelloHelp(w io.Writer) {
 	writeLines(w,
-		"mycli hello - print a greeting",
+		"lampo hello - print a greeting",
 		"",
 		"Usage:",
-		"  mycli hello [name]",
+		"  lampo hello [name]",
 		"",
 		"Examples:",
-		"  mycli hello",
-		"  mycli hello Alice",
+		"  lampo hello",
+		"  lampo hello Alice",
 	)
 }
 

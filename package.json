@@ -1,27 +1,27 @@
 {
-  "name": "@amxv/go-cli-template",
+  "name": "@amxv/lampo",
   "version": "0.1.0",
-  "description": "Template for shipping a Go CLI via npm with GitHub release automation",
+  "description": "A lightning-fast live LaTeX preview CLI",
   "license": "Apache-2.0",
   "author": "amxv",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/amxv/go-cli-template.git"
+    "url": "git+https://github.com/amxv/lampo.git"
   },
-  "homepage": "https://github.com/amxv/go-cli-template#readme",
+  "homepage": "https://lampo.ashray.xyz",
   "bugs": {
-    "url": "https://github.com/amxv/go-cli-template/issues"
+    "url": "https://github.com/amxv/lampo/issues"
   },
   "bin": {
-    "mycli": "bin/mycli.js"
+    "lampo": "bin/lampo.js"
   },
   "config": {
-    "cliName": "mycli",
-    "cliBinaryName": "mycli",
-    "goModule": "github.com/amxv/go-cli-template"
+    "cliName": "lampo",
+    "cliBinaryName": "lampo",
+    "goModule": "github.com/amxv/lampo"
   },
   "files": [
-    "bin/mycli.js",
+    "bin/lampo.js",
     "scripts/postinstall.js",
     "cmd",
     "internal",
@@ -35,7 +35,7 @@
   ],
   "scripts": {
     "postinstall": "node scripts/postinstall.js",
-    "test": "node --check bin/mycli.js && node --check scripts/postinstall.js && node --check scripts/project.js && node --check scripts/setup.js",
+    "test": "node --check bin/lampo.js && node --check scripts/postinstall.js && node --check scripts/project.js && node --check scripts/setup.js",
     "lint": "npm run test"
   },
   "engines": {
@@ -44,7 +44,9 @@
   "keywords": [
     "go",
     "cli",
-    "template",
+    "latex",
+    "preview",
+    "pdf",
     "npm",
     "release"
   ]
