@@ -13,9 +13,9 @@ Lampo has a small Go backend and a plain JavaScript/CSS browser frontend. There'
 ```text
 cmd/lampo/             Go CLI entrypoint
 internal/app/          Flags, help, version, interrupt handling
-internal/latex/        Project detection and latexmk compilation
+internal/latex/        Standalone document discovery, project selection, latexmk
 internal/watch/        Recursive filesystem events + source filtering
-internal/preview/      HTTP, SSE, debounced rebuilds, PDF downloads
+internal/preview/      HTTP, SSE, per-document build/cache coordinator, PDF downloads
 internal/preview/web/  Embedded static HTML, JavaScript, CSS, PDF.js
 docs/                 Astro/ZueDocs site (not bundled into CLI)
 ```
@@ -42,7 +42,7 @@ Run the docs check and docs build serially so Astro doesn't have two processes w
 
 ## Build model
 
-The server calls `latexmk` with an output directory in the OS temporary folder. A filesystem watcher observes nested source directories and sends coalesced change events. The compiler coordinator cancels superseded builds and publishes a new PDF only after a successful build. The SSE stream carries status updates and revision IDs; the browser loads changed PDF bytes directly and renders them through bundled PDF.js.
+The server discovers LaTeX document roots recursively and gives each one its own temporary `latexmk` directory and cached PDF. A filesystem watcher observes nested source directories and sends coalesced change events. The compiler coordinator cancels superseded builds and publishes a new PDF only after a successful build. The SSE stream carries document lists, selected entrypoint, status and revision IDs; the browser switches without navigation and renders with bundled PDF.js.
 
 Important invariants: never overwrite the user's source files, never serve a partial PDF, retain the last good output on failure, and keep the default server loopback-only.
 

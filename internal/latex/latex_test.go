@@ -27,8 +27,8 @@ func TestFindSource(t *testing.T) {
 		t.Fatalf("root detection: %q, %v", got, err)
 	}
 	write("other.tex", `\documentclass{article}`)
-	if _, err := FindSource(dir); err == nil || !strings.Contains(err.Error(), "multiple") {
-		t.Fatalf("expected ambiguity: %v", err)
+	if got, err := FindSource(dir); err != nil || filepath.Base(got) != "other.tex" {
+		t.Fatalf("deterministic root selection: %q, %v", got, err)
 	}
 	write("main.tex", `\documentclass{article}`)
 	if got, err := FindSource(dir); err != nil || filepath.Base(got) != "main.tex" {

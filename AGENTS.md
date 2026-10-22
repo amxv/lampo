@@ -10,9 +10,9 @@ Lampo is a local-first live LaTeX preview CLI, with a Go backend and an embedded
 
 - `cmd/lampo/main.go`: process entrypoint, error handling, exits non-zero on failure.
 - `internal/app/app.go`: argument parser and session launcher.
-- `internal/latex/`: TeX root selection and latexmk builds.
+- `internal/latex/`: standalone root discovery (including nested folders) and latexmk builds.
 - `internal/watch/`: recursive source watching with fsnotify.
-- `internal/preview/`: HTTP/SSE, rebuild scheduling, embedded UI and PDF export.
+- `internal/preview/`: HTTP/SSE, per-document PDF cache, switching, rebuild scheduling, embedded UI and export.
 - `internal/preview/web/`: vanilla JS/CSS plus vendored PDF.js (Apache-2.0).
 - `bin/lampo.js`: npm shim that invokes packaged native binary.
 - `scripts/postinstall.js`: downloads release binary on install, falls back to `go build`.
@@ -60,6 +60,8 @@ Direct commands:
 - `docs/src/content/docs/*.md` for guides and command reference
 
 6. Keep runtime self-contained: no external web requests/CDN, no project modifications from LaTeX builds, no preview leakage into public test fixtures. Always test real-time rebuilds and PDF export with a synthetic fixture before testing any private documents.
+
+   When adding features to document switching, preserve the coordinator's single-active-build invariant and validate selected document IDs against discovered files. Never accept absolute paths through the HTTP API. Keep source snippets out of the picker, and do not discard the selected document's last successful PDF on build failure.
 
 7. ZueDocs consumer pattern:
 - import shared layouts from `zuedocs/layouts/*`

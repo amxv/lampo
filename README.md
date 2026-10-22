@@ -22,9 +22,11 @@ lampo
 
 Lampo opens a browser tab with the PDF preview and prints the local URL in your terminal. Make changes in any editor, or ask your coding agent to edit the project. The browser updates after a successful compilation, without refreshing. Click **Export PDF** to choose a filename and download the result.
 
+If the folder contains multiple standalone `.tex` documents, **click the filename in the toolbar** to switch between them in the same tab. Lampo finds entrypoints automatically, including nested directories, and caches each document's last successful PDF so returning to it is immediate. Included chapters and helper snippets stay out of the document menu.
+
 ```bash
-lampo                       # Find main.tex or an unambiguous .tex file here
-lampo ./resume/main.tex     # Preview a specific document
+lampo                       # Discover all documents; open main.tex if present
+lampo ./resume/main.tex     # Start on this file, with other entrypoints selectable
 lampo ./paper --port 3030   # Use a fixed localhost port
 lampo main.tex --no-open    # Just print the URL
 lampo main.tex --engine xelatex
@@ -36,6 +38,7 @@ Lampo runs entirely on your machine: no account, uploads, SaaS, telemetry, CDN, 
 ## Built for fast iteration
 
 - **Fast change detection:** Native file events with a short debounce; detects updates to nested `.tex`, `.bib`, styles, images and other source assets, including atomic editor saves.
+- **Multiple documents, one tab:** Searchable filename dropdown for standalone `.tex` entrypoints, cached PDFs, and live discovery when files are created, moved or deleted.
 - **Instant and sharp resizing:** Drag a split-view divider without expensive redraws; after resizing settles, PDF.js quietly sharpens each page at its exact display size and Retina pixel density without blanking the preview.
 - **No page reload:** Server-sent events notify the preview when a new PDF is ready. Your browser preserves the preview while the next build runs.
 - **Useful build errors:** Compiler error banner and log panel, without discarding the last good PDF.

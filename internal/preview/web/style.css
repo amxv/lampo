@@ -25,6 +25,30 @@ button:focus-visible, input:focus-visible { outline: 2px solid #5b76c3; outline-
 .brand { font-size: 18px; font-weight: 740; letter-spacing: -1px; }
 .identity-divider { width: 1px; height: 18px; background: #deded7; margin: 0 5px 0 4px; }
 .filename { display: inline-block; color: #60635d; max-width: 250px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; font-weight: 530; }
+.document-picker { position: relative; min-width: 0; flex-shrink: 1; }
+.document-trigger { border: 1px solid transparent; display: flex; align-items: center; gap: 8px; background: transparent; border-radius: 7px; color: #61645c; min-height: 33px; max-width: 295px; min-width: 0; padding: 0 8px; text-align: left; }
+.document-trigger:hover, .document-trigger[aria-expanded="true"] { color: #292c28; background: #f0f1ed; border-color: #e6e7e0; }
+.document-trigger .filename { max-width: min(220px, 35vw); }
+.document-chevron { color: #8b8f87; flex-shrink: 0; transition: transform 0.15s ease; }
+.document-trigger[aria-expanded="true"] .document-chevron { transform: rotate(180deg); }
+.document-menu { position: absolute; z-index: 50; top: calc(100% + 8px); left: 0; width: min(326px, calc(100vw - 25px)); background: #fff; border: 1px solid #e1e3dc; box-shadow: 0 12px 40px #1a1d1726, 0 2px 9px #1a1d170e; border-radius: 10px; overflow: hidden; }
+.document-search-wrap { display: flex; gap: 8px; align-items: center; padding: 11px 12px; color: #84877f; border-bottom: 1px solid #eff0ec; }
+.document-search-wrap input { background: transparent; border: 0; outline: none; width: 100%; min-width: 0; height: 24px; color: #30332e; font-size: 12px; }
+.document-search-wrap input:focus-visible { outline: none; }
+.document-search-wrap input::placeholder { color: #a3a69e; }
+.document-search-wrap input::-webkit-search-cancel-button { cursor: pointer; }
+.document-search-wrap kbd { background: #f5f6f2; color: #92958d; border: 1px solid #e8e9e3; border-radius: 4px; padding: 1px 5px; font-size: 10px; }
+.document-list { padding: 5px; max-height: min(370px, 50vh); overflow-y: auto; scrollbar-color: #d5d7cf transparent; }
+.document-option { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; border: 0; border-radius: 7px; padding: 9px 9px; background: transparent; color: #4f534c; text-align: left; }
+.document-option:hover, .document-option:focus-visible { background: #f3f4f0; }
+.document-option.is-active { background: #eff2ea; color: #262b25; }
+.document-option svg { flex-shrink: 0; }
+.document-option-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.document-option-name { font-size: 12px; font-weight: 630; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.document-option-path { font-size: 10px; color: #969a91; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.document-option-check { color: #54795c; }
+.document-empty { color: #888c83; padding: 17px 12px; text-align: center; line-height: 1.6; font-size: 12px; }
+.document-menu-footer { font-size: 10px; color: #90948a; background: #f9faf7; border-top: 1px solid #eff0ec; padding: 9px 13px; }
 .toolbar-center { gap: 4px; background: #f3f4f0; border: 1px solid #ecece8; padding: 3px; border-radius: 9px; }
 .icon-button { display: grid; place-items: center; border: 0; color: #555750; background: transparent; border-radius: 6px; font-size: 20px; line-height: 1; height: 29px; min-width: 30px; }
 .icon-button:hover, .zoom-label:hover { background: #e6e7e1; color: #141512; }
@@ -101,6 +125,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid #5b76c3; outline-
   .identity { flex: 1 1 calc(100% - 150px); }
   .identity-divider { margin-inline: 0; }
   .filename { max-width: 180px; }
+  .document-trigger .filename { max-width: min(190px, 38vw); }
+  .document-menu { position: fixed; left: 12px; width: min(326px, calc(100vw - 24px)); }
   .toolbar-center { order: 3; margin: 0 auto; }
   .toolbar-actions { flex: 0 1 auto; gap: 10px; }
   .status { font-size: 0; }
@@ -109,6 +135,13 @@ button:focus-visible, input:focus-visible { outline: 2px solid #5b76c3; outline-
   .pages { padding: 18px 12px 32px; gap: 15px; }
   .footer { padding: 0 12px; }
   .footer-help { display: none; }
+}
+
+@media (max-width: 450px) {
+  .toolbar { gap: 8px; }
+  .identity { flex: 1 1 100%; }
+  .toolbar-center { order: 2; margin: 0; }
+  .toolbar-actions { order: 3; margin-left: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

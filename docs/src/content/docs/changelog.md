@@ -14,6 +14,7 @@ Lampo has not shipped its first release. The Go preview CLI is implemented on `m
 - Embedded PDF.js browser preview with live updates, zoom, text selection and PDF export.
 - Instant, redraw-free window resizing for smooth browser split-screen layouts.
 - Retina-sharp text at any preview width, with asynchronous per-page rendering once resizing stops.
+- Searchable same-tab document switcher with automatic standalone `.tex` discovery, per-document PDF caching, and live updates when files are added or removed.
 - Compiler error feedback that preserves the last successful PDF.
 - Portable Go CLI and npm wrapper, with release publication pending testing.
 

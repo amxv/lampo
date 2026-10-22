@@ -32,13 +32,17 @@ cd ~/path/to/your/latex-project
 lampo
 ```
 
-Lampo chooses `main.tex` if it exists, or automatically detects one unambiguous root document. For projects containing multiple entrypoints, provide the file explicitly:
+Lampo discovers standalone `.tex` documents in the current folder and its subfolders. It starts with `main.tex` if present, otherwise the first discovered entrypoint. To switch documents, click the current filename in the preview toolbar, search for a document, or press `/` to open the searchable picker. Switching keeps you in the **same browser tab** and reuses cached PDFs.
+
+To start on a particular document instead, specify its filename:
 
 ```bash
 lampo thesis.tex
 ```
 
 The terminal prints a URL on `127.0.0.1`, and the browser opens. Edit your `.tex` file and save it. Lampo rebuilds and replaces the preview without reloading the tab. Click **Export PDF**, enter your filename, and download the finished PDF.
+
+**What appears in the picker?** Standalone files declaring `\documentclass` (or legacy `\documentstyle`). Files containing only an included chapter or reusable LaTeX macro are watched but omitted from the menu. Newly added or removed documents appear automatically without restarting Lampo. If only one `.tex` file exists, it is still selectable even without a document declaration.
 
 ## Useful commands
 
@@ -58,4 +62,4 @@ The view stays open as long as the command runs. Use **Ctrl+C** to stop it. The 
 
 **Build failed?** Click the status indicator or **View log** in the error banner. Lampo retains your last successful preview until a clean build finishes.
 
-**No document found?** Run `lampo path/to/main.tex` explicitly. Lampo won't guess when several possible document roots exist.
+**No document found?** Add a standalone `.tex` file with a `\documentclass` declaration, or run `lampo path/to/file.tex` to explicitly select a source file. A folder containing multiple snippets with no entrypoint cannot compile as a document.

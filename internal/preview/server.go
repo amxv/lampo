@@ -37,41 +37,49 @@ type Options struct {
 }
 
 type Snapshot struct {
-	Status     string    `json:"status"`
-	Revision   uint64    `json:"revision"`
-	Filename   string    `json:"filename"`
-	Error      string    `json:"error,omitempty"`
-	Log        string    `json:"log,omitempty"`
-	DurationMs int64     `json:"durationMs,omitempty"`
-	UpdatedAt  time.Time `json:"updatedAt,omitempty"`
-	HasPDF     bool      `json:"hasPdf"`
+	Sequence   uint64           `json:"sequence"`
+	Status     string           `json:"status"`
+	Revision   uint64           `json:"revision"`
+	Filename   string           `json:"filename"`
+	ActiveID   string           `json:"activeId"`
+	Documents  []latex.Document `json:"documents"`
+	Error      string           `json:"error,omitempty"`
+	Log        string           `json:"log,omitempty"`
+	DurationMs int64            `json:"durationMs,omitempty"`
+	UpdatedAt  time.Time        `json:"updatedAt,omitempty"`
+	HasPDF     bool             `json:"hasPdf"`
 }
 
 type server struct {
-	mu      sync.RWMutex
-	state   Snapshot
-	pdf     []byte
-	clients map[chan Snapshot]struct{}
-	stdout  io.Writer
-	assetID string
+	mu             sync.RWMutex
+	state          Snapshot
+	pdf            []byte
+	clients        map[chan Snapshot]struct{}
+	stdout         io.Writer
+	assetID        string
+	selectDocument chan selectRequest
+	ctx            context.Context
 }
 
 func newServer(source string, stdout io.Writer) *server {
 	return &server{
-		state:   Snapshot{Status: "building", Filename: filepath.Base(source)},
-		clients: make(map[chan Snapshot]struct{}),
-		stdout:  stdout,
-		assetID: strconv.FormatInt(time.Now().UnixNano(), 36),
+		state:          Snapshot{Status: "building", Filename: filepath.Base(source), ActiveID: filepath.Base(source), Documents: []latex.Document{{ID: filepath.Base(source), Name: filepath.Base(source)}}},
+		clients:        make(map[chan Snapshot]struct{}),
+		stdout:         stdout,
+		assetID:        strconv.FormatInt(time.Now().UnixNano(), 36),
+		selectDocument: make(chan selectRequest),
+		ctx:            context.Background(),
 	}
 }
 
 // Serve listens only on localhost by default, and removes all generated TeX
 // files when stopped. It never writes into the source project.
 func Serve(ctx context.Context, options Options, stdout, stderr io.Writer) error {
-	source, err := latex.FindSource(options.Path)
+	project, err := latex.OpenProject(options.Path)
 	if err != nil {
 		return err
 	}
+	source := filepath.Join(project.Root, filepath.FromSlash(project.InitialID))
 	builder := latex.Builder{Source: source, Engine: options.Engine}
 	if err := builder.Check(); err != nil {
 		return err
@@ -82,7 +90,7 @@ func Serve(ctx context.Context, options Options, stdout, stderr io.Writer) error
 	}
 	defer os.RemoveAll(output)
 	builder.OutputDir = output
-	monitor, err := watch.New(filepath.Dir(source), stderr)
+	monitor, err := watch.New(project.Root, stderr)
 	if err != nil {
 		return err
 	}
@@ -95,6 +103,10 @@ func Serve(ctx context.Context, options Options, stdout, stderr io.Writer) error
 	}
 	defer listener.Close()
 	viewer := newServer(source, stdout)
+	viewer.ctx = ctx
+	viewer.state.ActiveID = project.InitialID
+	viewer.state.Documents = project.Documents
+	viewer.state.Filename = filepath.Base(source)
 	httpServer := &http.Server{
 		Handler:           viewer.routes(options.Host),
 		ReadHeaderTimeout: 5 * time.Second,
@@ -110,7 +122,7 @@ func Serve(ctx context.Context, options Options, stdout, stderr io.Writer) error
 	url := "http://" + net.JoinHostPort(visitHost, strconv.Itoa(addr.Port))
 	_, _ = fmt.Fprintf(stdout, "\n  ⚡ Lampo live preview\n  %s\n\n  Source: %s\n  Engine: %s\n  Watching for changes. Press Ctrl+C to stop.\n\n", url, source, options.Engine)
 	go monitor.Run(ctx)
-	go viewer.buildLoop(ctx, builder, monitor.Changes())
+	go viewer.buildLoop(ctx, project, output, builder.Engine, monitor.Changes())
 	serveDone := make(chan error, 1)
 	go func() { serveDone <- httpServer.Serve(listener) }()
 	if options.Open {
@@ -147,14 +159,24 @@ func openBrowser(url string) error {
 
 func (s *server) publish(next Snapshot, pdf []byte) {
 	s.mu.Lock()
+	next.Sequence = s.state.Sequence + 1
+	if next.ActiveID != s.state.ActiveID {
+		// Never display a cached PDF from a *different* document while the
+		// selected entrypoint is still compiling.
+		s.pdf = nil
+		s.state.Revision++
+	}
 	if pdf != nil {
 		s.pdf = pdf
-		next.Revision = s.state.Revision + 1
-	} else {
-		next.Revision = s.state.Revision
+		s.state.Revision++
 	}
+	next.Revision = s.state.Revision
 	next.HasPDF = len(s.pdf) > 0
-	next.Filename = s.state.Filename
+	if next.ActiveID != "" {
+		next.Filename = filepath.Base(filepath.FromSlash(next.ActiveID))
+	} else {
+		next.Filename = ""
+	}
 	s.state = next
 	for ch := range s.clients {
 		select {
@@ -192,6 +214,7 @@ func (s *server) routes(host string) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(s.snapshot())
 	})
+	mux.HandleFunc("POST /api/select", s.selectHandler)
 	mux.HandleFunc("GET /events", s.events)
 	mux.HandleFunc("GET /preview.pdf", s.servePDF(false))
 	mux.HandleFunc("GET /api/export", s.servePDF(true))
@@ -220,6 +243,57 @@ func (s *server) routes(host string) http.Handler {
 		}
 		mux.ServeHTTP(w, r)
 	})
+}
+
+type selectRequest struct {
+	id    string
+	reply chan error
+}
+
+func (s *server) selectHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Type", "application/json")
+	// This is a localhost-only state mutation, not a filesystem path API.
+	// Check Origin and content type so cross-site forms cannot switch documents.
+	if origin := r.Header.Get("Origin"); origin != "" && origin != "http://"+r.Host && origin != "https://"+r.Host {
+		http.Error(w, `{"error":"invalid origin"}`, http.StatusForbidden)
+		return
+	}
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		http.Error(w, `{"error":"expected application/json"}`, http.StatusUnsupportedMediaType)
+		return
+	}
+	var request struct {
+		ID string `json:"id"`
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096))
+	decoder.DisallowUnknownFields()
+	if decoder.Decode(&request) != nil || request.ID == "" {
+		http.Error(w, `{"error":"expected a document id"}`, http.StatusBadRequest)
+		return
+	}
+	message := selectRequest{id: request.ID, reply: make(chan error, 1)}
+	select {
+	case s.selectDocument <- message:
+	case <-s.ctx.Done():
+		http.Error(w, `{"error":"preview is shutting down"}`, http.StatusServiceUnavailable)
+		return
+	case <-r.Context().Done():
+		return
+	}
+	select {
+	case err := <-message.reply:
+		if err != nil {
+			http.Error(w, `{"error":"document not found"}`, http.StatusNotFound)
+			return
+		}
+	case <-s.ctx.Done():
+		http.Error(w, `{"error":"preview is shutting down"}`, http.StatusServiceUnavailable)
+		return
+	case <-r.Context().Done():
+		return
+	}
+	_ = json.NewEncoder(w).Encode(s.snapshot())
 }
 
 func allowedHost(requestHost, bindHost string) bool {

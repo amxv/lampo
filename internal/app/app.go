@@ -100,9 +100,10 @@ func printHelp(w io.Writer) {
 Usage:
   lampo [file.tex | directory] [options]
 
-Run without a file to open main.tex (or the only .tex file) in the current
-directory. Lampo watches your project, recompiles on save, and instantly
-updates the browser preview. Press Ctrl+C to stop.
+Run without a file to discover standalone .tex documents in the current
+directory. Lampo opens main.tex first when present, watches for changes,
+and lets you switch documents from the browser toolbar without reloading.
+Press Ctrl+C to stop.
 
 Options:
   -p, --port <number>     HTTP port (default: any free port)

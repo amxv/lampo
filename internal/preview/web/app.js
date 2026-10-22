@@ -1,5 +1,6 @@
 const assetVersion = new URL(import.meta.url).searchParams.get("v") || "1";
 const pdfjs = await import(`/vendor/pdf.mjs?v=${encodeURIComponent(assetVersion)}`);
+const { createDocumentPicker } = await import(`/document-picker.js?v=${encodeURIComponent(assetVersion)}`);
 
 pdfjs.GlobalWorkerOptions.workerSrc = `/vendor/pdf.worker.mjs?v=${encodeURIComponent(assetVersion)}`;
 
@@ -13,6 +14,7 @@ const logText = $("#log-text");
 const exportButton = $("#export");
 const dialog = $("#export-dialog");
 const nameInput = $("#export-name");
+const emptyPreview = $("#empty-state").cloneNode(true);
 
 let snapshot = null;
 let pdfDocument = null;
@@ -29,6 +31,23 @@ let renderFailure = "";
 let sharpRenderTimer = null;
 let renderMode = null;
 
+const picker = createDocumentPicker(async (id) => {
+  try {
+    const response = await fetch("/api/select", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!response.ok) throw new Error(`Could not select document (${response.status})`);
+    updateSnapshot(await response.json());
+  } catch (error) {
+    console.error("Lampo document switch error:", error);
+    setStatus("error", "Switch failed");
+    $("#error-banner").hidden = false;
+    $("#error-message").textContent = error.message;
+  }
+});
+
 // Resizing uses a cheap CSS transform immediately, then rasterizes each page
 // at the *actual* viewport scale and device pixel ratio once resizing stops.
 const maxFitScale = 1.55;
@@ -41,10 +60,13 @@ function setStatus(status, message) {
 }
 
 function updateSnapshot(next) {
+	if (snapshot && next.sequence < snapshot.sequence) return;
+	const switched = snapshot && next.activeId !== snapshot.activeId;
+	if (switched) resetDocumentPreview(next.status);
   snapshot = next;
   const ready = next.status === "ready";
-  $("#filename").textContent = next.filename;
-  document.title = `${next.filename} · Lampo`;
+  picker.update(next.documents, next.activeId);
+  document.title = `${next.filename || "LaTeX preview"} · Lampo`;
   exportButton.disabled = !next.hasPdf;
 
   if (next.status === "error") {
@@ -53,9 +75,11 @@ function updateSnapshot(next) {
     setStatus("building", next.hasPdf ? "Updating" : "Compiling");
   } else if (ready) {
     setStatus("ready", "Up to date");
+  } else if (next.status === "empty") {
+    setStatus("error", "No documents");
   }
 
-  const error = next.error || renderFailure;
+  const error = next.status === "empty" ? "" : (next.error || renderFailure);
   $("#error-banner").hidden = !error;
   $("#error-message").textContent = error;
   logText.textContent = next.log || "No compiler output yet.";
@@ -66,16 +90,53 @@ function updateSnapshot(next) {
   if (next.hasPdf && next.revision !== requestedRevision) {
     requestedRevision = next.revision;
     void loadPDF(next.revision);
-  } else if (!next.hasPdf && next.status === "error") {
+  } else if (!next.hasPdf && (next.status === "error" || next.status === "empty")) {
     showErrorEmptyState();
+  }
+}
+
+function resetDocumentPreview(status) {
+  // An in-flight PDF from the previous document must never appear under the
+  // newly selected filename. Keep cached bytes server-side until requested.
+  ++loadToken;
+  ++renderToken;
+  renderTask?.cancel();
+  clearTimeout(sharpRenderTimer);
+  renderMode = null;
+  pdfDocument = null;
+  renderedDocument = null;
+  renderedPages = [];
+  displayedScale = 1;
+  requestedRevision = -1;
+  const placeholder = emptyPreview.cloneNode(true);
+  if (status === "empty") {
+    placeholder.querySelector("h1").textContent = "No documents found";
+    placeholder.querySelector("p").textContent = "Create a standalone .tex file in this project to preview it here.";
+    placeholder.querySelector(".loading-line").hidden = true;
+  } else {
+    placeholder.querySelector("h1").textContent = "Opening document";
+    placeholder.querySelector("p").textContent = "Your selected PDF will appear here shortly.";
+  }
+  pages.replaceChildren(placeholder);
+  $("#page-count").textContent = "—";
+  $("#zoom-value").textContent = "Fit width";
+  if (loadingTask) {
+    const previous = loadingTask;
+    loadingTask = null;
+    void previous.destroy().catch(() => {});
   }
 }
 
 function showErrorEmptyState() {
   const message = $("#empty-state");
   if (!message) return;
-  message.querySelector("h1").textContent = "Waiting for a clean build";
-  message.querySelector("p").textContent = "Fix the LaTeX error and save your file. Lampo will automatically try again.";
+  if (snapshot?.status === "empty") {
+    message.querySelector("h1").textContent = "No documents found";
+    message.querySelector("p").textContent = "Create a standalone .tex file here and Lampo will discover it automatically.";
+  } else {
+    message.querySelector("h1").textContent = "Waiting for a clean build";
+    message.querySelector("p").textContent = "Fix the LaTeX error and save your file. Lampo will automatically try again.";
+  }
   message.querySelector(".loading-line").hidden = true;
 }
 

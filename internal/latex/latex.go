@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 )
@@ -34,59 +33,11 @@ type Builder struct {
 
 // FindSource resolves a path to a .tex document root.
 func FindSource(path string) (string, error) {
-	abs, err := filepath.Abs(path)
+	project, err := OpenProject(path)
 	if err != nil {
 		return "", err
 	}
-	info, err := os.Stat(abs)
-	if err != nil {
-		return "", fmt.Errorf("cannot find LaTeX project %q: %w", path, err)
-	}
-	if !info.IsDir() {
-		if strings.ToLower(filepath.Ext(abs)) != ".tex" {
-			return "", fmt.Errorf("expected a .tex file, got %q", path)
-		}
-		return abs, nil
-	}
-	main := filepath.Join(abs, "main.tex")
-	if stat, err := os.Stat(main); err == nil && stat.Mode().IsRegular() {
-		return main, nil
-	}
-	entries, err := os.ReadDir(abs)
-	if err != nil {
-		return "", err
-	}
-	var candidates, roots []string
-	for _, entry := range entries {
-		if entry.IsDir() || strings.ToLower(filepath.Ext(entry.Name())) != ".tex" {
-			continue
-		}
-		file := filepath.Join(abs, entry.Name())
-		candidates = append(candidates, file)
-		data, err := os.ReadFile(file)
-		if err == nil && (bytes.Contains(data, []byte(`\documentclass`)) || bytes.Contains(data, []byte(`\documentstyle`))) {
-			roots = append(roots, file)
-		}
-	}
-	if len(candidates) == 1 {
-		return candidates[0], nil
-	}
-	if len(roots) == 1 {
-		return roots[0], nil
-	}
-	if len(candidates) == 0 {
-		return "", fmt.Errorf("no .tex files in %q; pass a path to your .tex file", abs)
-	}
-	sort.Strings(candidates)
-	return "", fmt.Errorf("multiple .tex files in %q (%s); specify the main file explicitly", abs, strings.Join(baseNames(candidates), ", "))
-}
-
-func baseNames(paths []string) []string {
-	names := make([]string, len(paths))
-	for i, path := range paths {
-		names[i] = filepath.Base(path)
-	}
-	return names
+	return filepath.Join(project.Root, filepath.FromSlash(project.InitialID)), nil
 }
 
 // Check makes the error for missing TeX installations actionable before launch.

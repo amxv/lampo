@@ -17,7 +17,22 @@
           </div>
           <span class="brand">lampo</span>
           <span class="identity-divider" aria-hidden="true"></span>
-          <span id="filename" class="filename" title="Current document">LaTeX preview</span>
+          <div id="document-picker" class="document-picker">
+            <button id="document-trigger" class="document-trigger" type="button" aria-label="Choose LaTeX document" aria-haspopup="dialog" aria-expanded="false" aria-controls="document-menu" title="Switch document">
+              <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg>
+              <span id="filename" class="filename">LaTeX preview</span>
+              <svg aria-hidden="true" class="document-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="document-menu" class="document-menu" role="dialog" aria-label="Switch LaTeX document" hidden>
+              <div class="document-search-wrap">
+                <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.4-4.4"/></svg>
+                <input id="document-search" type="search" placeholder="Find a document…" aria-label="Search LaTeX documents" autocomplete="off" spellcheck="false" />
+                <kbd>/</kbd>
+              </div>
+              <div id="document-list" class="document-list" aria-label="Available LaTeX documents"></div>
+              <div id="document-menu-footer" class="document-menu-footer">Watching for LaTeX documents</div>
+            </div>
+          </div>
         </div>
 
         <div class="toolbar-center" role="group" aria-label="Zoom controls">
