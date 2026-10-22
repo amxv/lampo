@@ -40,7 +40,7 @@ lampo paper.tex --engine lualatex --no-open
 - Saves to `.tex`, `.bib`, `.sty`, `.cls`, figures and other source asset types trigger builds; new nested directories are watched automatically.
 - Short, burst-coalescing delays prevent duplicate rebuilds during editor saves. Superseded builds are canceled.
 - Only fully compiled PDFs appear in the browser. If a build fails, the previous PDF remains readable and the error log is available.
-- Resizing the browser scales existing PDF layers without re-rendering them. Zoom changes take effect immediately; higher zoom levels sharpen the PDF after interaction settles.
+- Window resizing and zoom respond immediately by transforming existing layers. After interaction settles, PDF.js renders fresh, crisp text at the final scale and display's pixel density, replacing one completed page at a time without blanking or moving the preview. Intermediate resize frames never trigger expensive redraws.
 - Auxiliary build files live outside the source directory and are removed when the server stops.
 
 The browser uses bundled Mozilla PDF.js; communication is over local HTTP and server-sent events. Lampo does not require Node.js at runtime and makes no requests to a cloud service.

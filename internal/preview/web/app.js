@@ -24,12 +24,16 @@ let renderTask = null;
 let customScale = null;
 let displayedScale = 1;
 let renderedPages = [];
+let renderedDocument = null;
 let renderFailure = "";
-let zoomRenderTimer = null;
+let sharpRenderTimer = null;
+let renderMode = null;
 
-// A page rendered at this scale remains sharp at every fit-to-width size.
-// Resizing only changes CSS transforms; it never starts a PDF.js render.
+// Resizing uses a cheap CSS transform immediately, then rasterizes each page
+// at the *actual* viewport scale and device pixel ratio once resizing stops.
 const maxFitScale = 1.55;
+const sharpenDelay = 160;
+const maxCanvasPixels = 16_000_000;
 
 function setStatus(status, message) {
   statusButton.className = `status status--${status}`;
@@ -109,6 +113,17 @@ function fitScale(pageWidth) {
   return Math.max(0.15, Math.min(maxFitScale, (viewport.clientWidth - margin) / pageWidth));
 }
 
+function outputPixelRatio(width, height) {
+  // Render at the display's native Retina/HiDPI resolution where possible,
+  // with a bounded bitmap for very large paper sizes or extreme zoom levels.
+  return Math.min(
+    Math.max(1, window.devicePixelRatio || 1),
+    3,
+    Math.sqrt(maxCanvasPixels / (width * height)),
+    8192 / Math.max(width, height),
+  );
+}
+
 // Keep the expensive canvas/text/annotation layers at their original render
 // resolution. The outer page takes up the *scaled* space in the document flow,
 // while one transform scales all inner layers together. This is cheap enough
@@ -123,26 +138,42 @@ function layoutPages() {
   for (const { frame, content, width, height, renderScale } of renderedPages) {
     frame.style.width = `${width * scale}px`;
     frame.style.height = `${height * scale}px`;
-    content.style.transform = `scale(${scale / renderScale})`;
+    // Disable CSS compositing once the raster matches the displayed size.
+    // Keeping scale(1) creates a layer that can soften fine PDF lettering.
+    const ratio = scale / renderScale;
+    content.style.transform = Math.abs(ratio - 1) < 0.0001 ? "none" : `scale(${ratio})`;
   }
 }
 
-function scheduleZoomRender() {
-  clearTimeout(zoomRenderTimer);
-  if (!pdfDocument || !renderedPages.length || displayedScale <= renderedPages[0].renderScale * 1.05) return;
-  // Zoom immediately using the existing bitmap, then sharpen once clicks stop.
-  zoomRenderTimer = setTimeout(() => {
-    if (pdfDocument && renderedPages.length && displayedScale > renderedPages[0].renderScale * 1.05) {
-      void renderPages();
-    }
-  }, 350);
+function needsSharpRender() {
+  if (renderedDocument !== pdfDocument || !renderedPages.length) return false;
+  return renderedPages.some(({ width, height, renderScale, pixelRatio: renderedRatio }) =>
+    Math.abs(renderScale - displayedScale) > Math.max(0.002, displayedScale * 0.005) ||
+    Math.abs(outputPixelRatio(width * displayedScale, height * displayedScale) - renderedRatio) > 0.005
+  );
 }
 
-async function renderPages(pdfDoc = pdfDocument) {
+function cancelSharpening() {
+  if (renderMode !== "sharpen") return;
+  ++renderToken;
+  renderTask?.cancel();
+  renderMode = null;
+}
+
+function scheduleSharpRender() {
+  clearTimeout(sharpRenderTimer);
+  if (!needsSharpRender() || renderMode !== null) return;
+  sharpRenderTimer = setTimeout(() => {
+    if (needsSharpRender()) void renderPages(pdfDocument, true);
+  }, sharpenDelay);
+}
+
+async function renderPages(pdfDoc = pdfDocument, sharpen = false) {
   if (!pdfDoc) return;
-  clearTimeout(zoomRenderTimer);
+  clearTimeout(sharpRenderTimer);
   const token = ++renderToken;
   if (renderTask) renderTask.cancel();
+  renderMode = sharpen ? "sharpen" : "document";
   const ratio = viewport.scrollTop / Math.max(1, viewport.scrollHeight - viewport.clientHeight);
   const staging = document.createDocumentFragment();
   const newPages = [];
@@ -150,28 +181,34 @@ async function renderPages(pdfDoc = pdfDocument) {
   try {
     const first = await pdfDoc.getPage(1);
     if (token !== renderToken) return;
-    const renderScale = Math.max(maxFitScale, customScale ?? 0);
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-
+    if (sharpen && (renderedDocument !== pdfDoc || renderedPages.length !== pdfDoc.numPages)) return;
+    const renderScale = sharpen
+      ? displayedScale
+      : customScale ?? fitScale(first.getViewport({ scale: 1 }).width);
     for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber++) {
       if (token !== renderToken) return;
       const page = pageNumber === 1 ? first : await pdfDoc.getPage(pageNumber);
+      if (token !== renderToken) return;
       const view = page.getViewport({ scale: renderScale });
-      const section = document.createElement("section");
-      section.className = "pdf-page";
-      section.setAttribute("aria-label", `Page ${pageNumber}`);
+      const pixelRatio = outputPixelRatio(view.width, view.height);
+      const section = sharpen ? renderedPages[pageNumber - 1].frame : document.createElement("section");
+      if (!sharpen) {
+        section.className = "pdf-page";
+        section.setAttribute("aria-label", `Page ${pageNumber}`);
+      }
       const content = document.createElement("div");
       content.className = "pdf-page-content";
       content.style.width = `${view.width}px`;
       content.style.height = `${view.height}px`;
-      section.append(content);
-      newPages.push({
+      if (!sharpen) section.append(content);
+      const pageRecord = {
         frame: section,
         content,
         width: view.width / renderScale,
         height: view.height / renderScale,
         renderScale,
-      });
+        pixelRatio,
+      };
 
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(view.width * pixelRatio);
@@ -181,14 +218,18 @@ async function renderPages(pdfDoc = pdfDocument) {
       content.append(canvas);
       const context = canvas.getContext("2d", { alpha: false });
       if (!context) throw new Error("Canvas 2D rendering is unavailable");
-      renderTask = page.render({
+      const task = page.render({
         canvasContext: context,
         viewport: view,
         transform: pixelRatio === 1 ? undefined : [pixelRatio, 0, 0, pixelRatio, 0, 0],
         background: "#ffffff",
       });
-      await renderTask.promise;
-      renderTask = null;
+      renderTask = task;
+      try {
+        await task.promise;
+      } finally {
+        if (renderTask === task) renderTask = null;
+      }
       if (token !== renderToken) return;
 
       // Text remains selectable, while annotations preserve clickable links.
@@ -233,45 +274,87 @@ async function renderPages(pdfDoc = pdfDocument) {
       } catch (error) {
         console.warn("Lampo: some links cannot be previewed", error);
       }
-      staging.append(section);
+
+      if (token !== renderToken) return;
+      if (sharpen) {
+        // Commit one completed page at a time. The old canvas stays visible
+        // during the whole render, and frame dimensions never change.
+        section.replaceChildren(content);
+        renderedPages[pageNumber - 1] = pageRecord;
+        const scaleRatio = displayedScale / renderScale;
+        content.style.transform = Math.abs(scaleRatio - 1) < 0.0001 ? "none" : `scale(${scaleRatio})`;
+      } else {
+        newPages.push(pageRecord);
+        staging.append(section);
+      }
     }
 
     if (token !== renderToken) return;
-    pages.replaceChildren(staging);
-    renderedPages = newPages;
-    // Force a layout update for the newly rendered document, even when its
-    // display scale matches the previous revision.
-    displayedScale = 0;
-    layoutPages();
-    $("#page-count").textContent = `${pdfDoc.numPages} ${pdfDoc.numPages === 1 ? "page" : "pages"}`;
-    viewport.scrollTop = ratio * Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+    if (!sharpen) {
+      pages.replaceChildren(staging);
+      renderedPages = newPages;
+      renderedDocument = pdfDoc;
+      // Force layout for the new PDF even when its scale matches the last one.
+      displayedScale = 0;
+      layoutPages();
+      $("#page-count").textContent = `${pdfDoc.numPages} ${pdfDoc.numPages === 1 ? "page" : "pages"}`;
+      viewport.scrollTop = ratio * Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+    }
   } catch (error) {
     if (token !== renderToken || error?.name === "RenderingCancelledException") return;
     console.error("Lampo page render error:", error);
-    renderFailure = `Preview rendering failed: ${error.message}`;
-    $("#error-banner").hidden = false;
-    $("#error-message").textContent = renderFailure;
-    setStatus("error", "Preview error");
+    if (sharpen) {
+      console.warn("Lampo: keeping the previous PDF rendering after a sharpening failure.");
+    } else {
+      renderFailure = `Preview rendering failed: ${error.message}`;
+      $("#error-banner").hidden = false;
+      $("#error-message").textContent = renderFailure;
+      setStatus("error", "Preview error");
+    }
+  } finally {
+    if (token === renderToken) {
+      renderMode = null;
+      // If the window moved while a new PDF was loading, resharpen it now.
+      if (needsSharpRender() && !sharpen) scheduleSharpRender();
+    }
   }
 }
 
 function changeZoom(factor) {
   customScale = Math.max(0.25, Math.min(3, displayedScale * factor));
+  cancelSharpening();
   layoutPages();
-  scheduleZoomRender();
+  scheduleSharpRender();
 }
 
 $("#zoom-out").addEventListener("click", () => changeZoom(1 / 1.2));
 $("#zoom-in").addEventListener("click", () => changeZoom(1.2));
 $("#zoom-value").addEventListener("click", () => {
   customScale = null;
-  clearTimeout(zoomRenderTimer);
+  cancelSharpening();
   layoutPages();
+  scheduleSharpRender();
 });
 
 new ResizeObserver(() => {
-  if (customScale === null) layoutPages();
+  if (customScale !== null) return;
+  const previousScale = displayedScale;
+  layoutPages();
+  if (Math.abs(displayedScale - previousScale) > 0.0001) cancelSharpening();
+  scheduleSharpRender();
 }).observe(viewport);
+
+// A tab moved between monitors can change pixel density without changing its
+// CSS width. In that case refresh the backing canvas at the new device scale.
+function watchDevicePixelRatio() {
+  const query = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+  query.addEventListener("change", () => {
+    cancelSharpening();
+    scheduleSharpRender();
+    watchDevicePixelRatio();
+  }, { once: true });
+}
+watchDevicePixelRatio();
 
 function toggleLog(open) { logPanel.hidden = !open; }
 statusButton.addEventListener("click", () => toggleLog(logPanel.hidden));
@@ -314,7 +397,7 @@ document.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement || event.metaKey || event.ctrlKey || event.altKey) return;
   if (event.key === "+" || event.key === "=") changeZoom(1.2);
   if (event.key === "-") changeZoom(1 / 1.2);
-  if (event.key === "0") { customScale = null; clearTimeout(zoomRenderTimer); layoutPages(); }
+  if (event.key === "0") { customScale = null; cancelSharpening(); layoutPages(); scheduleSharpRender(); }
 });
 
 const events = new EventSource("/events");
