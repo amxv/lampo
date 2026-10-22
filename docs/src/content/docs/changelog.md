@@ -3,16 +3,17 @@ title: Changelog
 description: "Release notes for this CLI."
 order: 99
 category: Distribution
-summary: Planned release notes; no versions have been published yet.
+summary: Upcoming release notes. No version has been published yet.
 ---
 
-Lampo has not shipped its first release. Replace this placeholder with real, dated release notes when the preview CLI is ready.
+Lampo has not shipped its first release. The Go preview CLI is implemented on `main` and is being tested before tagging.
 
-## 0.1.0 - YYYY-MM-DD
+## Unreleased - 0.1.0 candidate
 
-- Initial release.
-- Describe the first usable CLI commands.
-- Describe any install, npm package, or release-binary behavior users should know about.
+- Local watch/compile loop for TeX projects, with automatic root-file discovery.
+- Embedded PDF.js browser preview with live updates, zoom, text selection and PDF export.
+- Compiler error feedback that preserves the last successful PDF.
+- Portable Go CLI and npm wrapper, with release publication pending testing.
 
 ## Maintainer notes
 

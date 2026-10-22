@@ -13,7 +13,7 @@ LDFLAGS ?= -s -w -X github.com/amxv/lampo/internal/buildinfo.Version=$(if $(VERS
 .PHONY: help bootstrap fmt test vet lint check docs-install docs-dev docs-check docs-build docs-preview build build-all install-local clean release-tag
 
 help:
-	@echo "go-cli-template command runner"
+	@echo "Lampo command runner"
 	@echo ""
 	@echo "Targets:"
 	@echo "  make bootstrap    - initialize CLI, module, repo, npm, docs, and license identity"
@@ -71,13 +71,13 @@ build:
 
 build-all:
 	@mkdir -p $(DIST_DIR)
-	@for target in "darwin amd64" "darwin arm64" "linux amd64" "linux arm64" "windows amd64"; do \
-		set -- $$target; \
-		GOOS=$$1; GOARCH=$$2; \
-		EXT=""; \
-		if [ "$$GOOS" = "windows" ]; then EXT=".exe"; fi; \
-		echo "Building $(BIN_NAME) for $$GOOS/$$GOARCH"; \
-		CGO_ENABLED=0 GOOS=$$GOOS GOARCH=$$GOARCH $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o "$(DIST_DIR)/$(BIN_NAME)_$$GOOS_$$GOARCH$$EXT" $(CMD_PATH); \
+	@set -e; for target in "darwin amd64" "darwin arm64" "linux amd64" "linux arm64" "windows amd64" "windows arm64"; do \
+	set -- $$target; \
+	GOOS=$$1; GOARCH=$$2; \
+	EXT=""; \
+	if [ "$$GOOS" = "windows" ]; then EXT=".exe"; fi; \
+	echo "Building $(BIN_NAME) for $$GOOS/$$GOARCH"; \
+	CGO_ENABLED=0 GOOS=$$GOOS GOARCH=$$GOARCH $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o "$(DIST_DIR)/$(BIN_NAME)_$${GOOS}_$${GOARCH}$${EXT}" $(CMD_PATH); \
 	done
 
 install-local: build

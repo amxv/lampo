@@ -8,27 +8,27 @@ const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.
 const proofPoints = [
   {
     title: "Live feedback",
-    body: "Planned: edit a .tex file and see changes reflected in the browser without manually refreshing or rebuilding."
+    body: "Save a .tex file and the preview quietly refreshes itself. No manual builds, no page reload."
   },
   {
     title: "One terminal command",
-    body: "Planned: start a local preview server in your project directory and open the URL in any browser."
+    body: "Run lampo in your project directory to start a tiny localhost server and open your browser."
   },
   {
     title: "Export when ready",
-    body: "Planned: save the rendered result directly as a PDF, without interrupting the preview session."
+    body: "Choose a filename and download a crisp PDF straight from the preview toolbar."
   },
   {
     title: "Agent-friendly by design",
-    body: "A lightweight local tool that stays out of the way while coding agents edit LaTeX source files."
+    body: "Point any editor or coding agent at the same LaTeX files. Lampo just watches and renders."
   }
 ];
 
 const workflows = [
-  "Watch LaTeX source and included files for changes.",
-  "Compile with minimal latency and stream state to a browser preview.",
-  "Keep the preview responsive through errors and rebuilds.",
-  "Export a named PDF directly from the browser."
+  "Watch LaTeX source, included chapters, bibliographies and figures.",
+  "Debounce saves, compile with latexmk, and stream updates over local HTTP.",
+  "Keep the last good PDF in view, even when an edit breaks the build.",
+  "Zoom, select text, follow links and export a named PDF."
 ];
 ---
 
@@ -40,14 +40,14 @@ const workflows = [
 >
   <section class="hero shell">
     <div class="hero__copy">
-      <p class="section-label">Introducing Lampo · In development</p>
+      <p class="section-label">Introducing Lampo · Source preview available</p>
       <h1>LaTeX at the speed of thought.</h1>
       <p class="hero__lede">
         A tiny command-line tool for an instant, always-open LaTeX preview in your browser.
         Edit the source, watch it update, and export the finished PDF when you're done.
       </p>
       <p class="hero__annotation">
-        Built with coding agents in mind. The repository is live; the preview engine is next.
+        Built with coding agents in mind. The preview works today from source, with the first public binary release coming after testing.
       </p>
       <div class="hero__actions">
         <a class="button button--solid" href="https://github.com/amxv/lampo">View on GitHub</a>
@@ -55,17 +55,18 @@ const workflows = [
       </div>
     </div>
     <aside class="hero__panel">
-      <p class="hero__panel-label">What's being built</p>
+      <p class="hero__panel-label">Ready for local testing</p>
       <ul class="hero__signal-list">
-        <li>Local LaTeX watch and compile loop.</li>
-        <li>Low-latency browser preview.</li>
-        <li>One-click PDF download.</li>
+        <li>Native file watching and LaTeX builds.</li>
+        <li>Bundled PDF.js preview, no CDN.</li>
+        <li>Named PDF downloads in the browser.</li>
       </ul>
       <div class="hero__terminal">
-        <span># Repository scaffold is available now</span>
+        <span># Build and install from source</span>
         <span>$ git clone https://github.com/amxv/lampo</span>
         <span>$ cd lampo</span>
-        <span>$ make check</span>
+        <span>$ make install-local</span>
+        <span>$ lampo ~/projects/paper/main.tex</span>
       </div>
     </aside>
   </section>
@@ -75,9 +76,8 @@ const workflows = [
       <p class="section-label">The idea</p>
       <h2>The edit–compile–refresh loop should disappear.</h2>
       <p>
-        Live previews are ordinary in web development. Lampo aims to bring that same
-        effortless feedback loop to LaTeX, without a heavyweight editor or a special workflow.
-        These capabilities are planned, not yet released.
+        Live previews are ordinary in web development. Lampo brings that same
+        effortless feedback loop to LaTeX, without a heavyweight editor or special workflow.
       </p>
     </div>
     <div class="proof-grid">
@@ -92,7 +92,7 @@ const workflows = [
 
   <section class="shell split-section">
     <div>
-      <p class="section-label">Roadmap</p>
+      <p class="section-label">Workflow</p>
       <h2>Small footprint. Fast feedback. A browser is all you need.</h2>
     </div>
     <div class="stack-list">
@@ -107,16 +107,16 @@ const workflows = [
   <section class="shell capability-band">
     <div class="capability-band__intro">
       <p class="section-label">Foundation in place</p>
-      <h2>The project infrastructure is ready for development.</h2>
+      <h2>Minimal dependencies, built for real work.</h2>
     </div>
     <div class="capability-band__grid">
       <div>
         <p class="capability-title">Go CLI</p>
-        <p>Starter command, build, tests, version plumbing, and development targets.</p>
+        <p>One native binary includes the HTTP server, filesystem watcher and browser UI.</p>
       </div>
       <div>
         <p class="capability-title">npm distribution</p>
-        <p>JavaScript shim and native binary installer, ready for the first real release.</p>
+        <p>Tag-driven native releases and an npm shim are ready for first publication.</p>
       </div>
       <div>
         <p class="capability-title">Release pipeline</p>
@@ -132,10 +132,9 @@ const workflows = [
   <section class="shell docs-teaser">
     <div class="section-heading">
       <p class="section-label">Documentation</p>
-      <h2>Follow development from the first commit.</h2>
+      <h2>Everything you need to get started.</h2>
       <p>
-        For now the docs describe the starter command, local development, and release setup.
-        User-facing preview commands will be documented as they are implemented.
+        Learn how to run your own live preview, tune the compiler, and build Lampo from source.
       </p>
     </div>
     <div class="docs-teaser__grid">
@@ -151,7 +150,7 @@ const workflows = [
 
   <section class="shell closing-note">
     <p>
-      Lampo is in early development. Follow along on GitHub.
+      Lampo is being tested before its first release. Try the source build and follow along on GitHub.
     </p>
   </section>
 </BaseLayout>

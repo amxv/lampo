@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f7f5" />
+    <title>Lampo — Live LaTeX Preview</title>
+    <link rel="stylesheet" href="/style.css?v=__LAMPO_ASSET_VERSION__" />
+    <script type="module" src="/app.js?v=__LAMPO_ASSET_VERSION__"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="toolbar">
+        <div class="identity">
+          <div class="mark" aria-hidden="true">
+            <svg width="19" height="23" viewBox="0 0 19 23" fill="none"><path d="m11.1 1-9 11.6h6l-1 9.4L17 8.4h-6.1L11.1 1Z" fill="currentColor" stroke="currentColor" stroke-linejoin="round" /></svg>
+          </div>
+          <span class="brand">lampo</span>
+          <span class="identity-divider" aria-hidden="true"></span>
+          <span id="filename" class="filename" title="Current document">LaTeX preview</span>
+        </div>
+
+        <div class="toolbar-center" role="group" aria-label="Zoom controls">
+          <button class="icon-button" id="zoom-out" aria-label="Zoom out" title="Zoom out (−)" type="button">−</button>
+          <button class="zoom-label" id="zoom-value" title="Fit page to window" type="button">Fit width</button>
+          <button class="icon-button" id="zoom-in" aria-label="Zoom in" title="Zoom in (+)" type="button">+</button>
+        </div>
+
+        <div class="toolbar-actions">
+          <button id="build-status" class="status status--building" type="button" aria-label="Show build details" title="Show build details">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="status-text">Compiling</span>
+          </button>
+          <button id="export" class="export-button" type="button" disabled>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg>
+            <span>Export PDF</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div id="error-banner" class="error-banner" role="alert" hidden>
+          <div class="error-copy"><strong>Build failed.</strong> <span id="error-message"></span></div>
+          <button id="show-error-log" class="text-button" type="button">View log ↗</button>
+        </div>
+
+        <main id="viewport" class="viewport" aria-label="PDF preview">
+          <div id="pages" class="pages">
+            <div id="empty-state" class="empty-state">
+              <div class="loading-symbol" aria-hidden="true"><span class="mini-bolt">ϟ</span></div>
+              <h1>Making your PDF</h1>
+              <p>Your preview will appear here as soon as LaTeX finishes compiling.</p>
+              <div class="loading-line" aria-hidden="true"><span></span></div>
+            </div>
+          </div>
+        </main>
+
+        <aside id="log-panel" class="log-panel" aria-label="Build log" hidden>
+          <div class="log-header">
+            <div>
+              <div class="overline">Compiler output</div>
+              <strong>Build details</strong>
+            </div>
+            <div class="log-actions">
+              <button id="copy-log" class="quiet-button" type="button">Copy log</button>
+              <button id="close-log" class="icon-button close-button" type="button" aria-label="Close build log">×</button>
+            </div>
+          </div>
+          <pre id="log-text">Waiting for compiler…</pre>
+        </aside>
+      </div>
+
+      <footer class="footer">
+        <span id="page-count">—</span>
+        <span class="footer-help">Changes appear automatically. Keep writing.</span>
+        <span id="compile-time">Local preview</span>
+      </footer>
+    </div>
+
+    <div id="export-dialog" class="dialog-backdrop" hidden>
+      <form id="export-form" class="dialog" role="dialog" aria-modal="true" aria-labelledby="export-title">
+        <div class="dialog-icon" aria-hidden="true">↗</div>
+        <h2 id="export-title">Export your PDF</h2>
+        <p>Save the latest successful compilation to your downloads.</p>
+        <label for="export-name">File name</label>
+        <input id="export-name" type="text" spellcheck="false" autocomplete="off" required maxlength="180" />
+        <div class="dialog-buttons">
+          <button id="export-cancel" class="secondary-button" type="button">Cancel</button>
+          <button class="export-button" type="submit">Download PDF</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

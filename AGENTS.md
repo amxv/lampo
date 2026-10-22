@@ -4,18 +4,19 @@ Guidance for coding agents working in `lampo`.
 
 ## Purpose
 
-This repo is the starter for Lampo, a planned live LaTeX preview CLI distributed through npm. The preview functionality is not implemented yet.
-
-The sample command is `lampo`. Replace it with your actual CLI name and behavior.
+Lampo is a local-first live LaTeX preview CLI, with a Go backend and an embedded PDF.js browser UI. The first public release is pending dogfooding; do not push version tags until the user approves a release.
 
 ## Architecture
 
 - `cmd/lampo/main.go`: process entrypoint, error handling, exits non-zero on failure.
-- `internal/app/app.go`: command parser + handlers.
-- `internal/app/app_test.go`: starter tests.
+- `internal/app/app.go`: argument parser and session launcher.
+- `internal/latex/`: TeX root selection and latexmk builds.
+- `internal/watch/`: recursive source watching with fsnotify.
+- `internal/preview/`: HTTP/SSE, rebuild scheduling, embedded UI and PDF export.
+- `internal/preview/web/`: vanilla JS/CSS plus vendored PDF.js (Apache-2.0).
 - `bin/lampo.js`: npm shim that invokes packaged native binary.
 - `scripts/postinstall.js`: downloads release binary on install, falls back to `go build`.
-- `scripts/setup.js`: initializes command, module, repository, npm, docs, and license identity.
+- `scripts/setup.js`: historical project bootstrap tool. Lampo is already initialized; do not rerun it.
 - `project.config.json`: canonical repeated project identity fields.
 - `.github/workflows/release.yml`: tag-driven release pipeline.
 - `docs/`: self-contained Astro/ZueDocs workspace with its own Bun lockfile and Vercel config.
@@ -32,7 +33,6 @@ Use `make` targets:
 - `make build`
 - `make build-all`
 - `make install-local`
-- `make bootstrap BOOTSTRAP_ARGS='...'`
 
 Direct commands:
 
@@ -42,11 +42,9 @@ Direct commands:
 - `make docs-check`
 - `make docs-build`
 
-## How to customize safely
+## Development invariants
 
-1. Run `make bootstrap` to rename the CLI command consistently.
-The bootstrap script updates the command path, npm wrapper, package metadata, Go
-module, Makefile, workflow, postinstall, docs config, and license metadata.
+1. The CLI name, npm package, repository and Go module are already configured for Lampo. Do not run `make bootstrap` or rename the existing project.
 
 2. Keep binary naming convention unchanged unless you also update postinstall/workflow:
 - release assets: `<binary>_<goos>_<goarch>[.exe]`
@@ -61,7 +59,9 @@ module, Makefile, workflow, postinstall, docs config, and license metadata.
 - `docs/src/pages/index.astro` for landing-page product copy
 - `docs/src/content/docs/*.md` for guides and command reference
 
-6. ZueDocs consumer pattern:
+6. Keep runtime self-contained: no external web requests/CDN, no project modifications from LaTeX builds, no preview leakage into public test fixtures. Always test real-time rebuilds and PDF export with a synthetic fixture before testing any private documents.
+
+7. ZueDocs consumer pattern:
 - import shared layouts from `zuedocs/layouts/*`
 - import shared behavior/styles from `zuedocs/docsEnhancements` and `zuedocs/styles.css`
 - keep repo-specific content/config local instead of forking shared shell files
@@ -84,12 +84,11 @@ Release pipeline triggers on `v*` tags and expects:
 
 ## Changelog and Release Skill
 
-This template includes:
+Lampo includes:
 
-- `docs/src/content/docs/changelog.md` as a placeholder changelog page for generated projects.
+- `docs/src/content/docs/changelog.md` with unreleased notes until the first release is approved.
 - `.agents/skills/release/SKILL.md` as a release checklist that updates the changelog before tagging.
 
-When customizing the template for a real CLI, keep both files and update the
-placeholder changelog manually before each release. Run the checks and docs
-validation, commit and push the changelog, then push a `v*` tag. GitHub Actions
-builds the release assets and publishes npm.
+Before each release, update the changelog manually. Run checks and docs
+validation, commit and push the changelog, then push a `v*` tag only when the
+user has authorized the release. GitHub Actions publishes assets and npm.

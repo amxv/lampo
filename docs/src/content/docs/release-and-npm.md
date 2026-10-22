@@ -71,10 +71,8 @@ NPM_TOKEN
 
 Make sure the package name in `package.json` is available and publishable before tagging a release.
 
-The default package license is Apache-2.0 and is kept in sync with `LICENSE` and
-the bootstrap metadata. Run `make bootstrap BOOTSTRAP_ARGS='--license MIT'` when a project
-needs a different supported license and has the optional `license-generator` CLI
-installed.
+Lampo is licensed Apache-2.0. PDF.js is distributed with its corresponding
+Apache-2.0 license notice in the bundled browser assets.
 
 ## Repository visibility
 

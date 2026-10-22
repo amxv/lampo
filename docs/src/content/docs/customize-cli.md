@@ -1,78 +1,51 @@
 ---
-title: Customize the CLI
-description: Rename the starter command, update project identity, and replace the starter command handlers safely.
+title: Contributing to Lampo
+description: Understand the Go compiler/watch loop and contribute improvements.
 order: 2
 category: Development
-summary: The main checklist for turning lampo into a real Go command-line tool.
+summary: Architecture, local tests, and how to iterate on the embedded browser UI.
 ---
 
-## Initialize identity
+Lampo has a small Go backend and a plain JavaScript/CSS browser frontend. There's no JavaScript bundler in the application runtime or release build.
 
-Run one bootstrap command before adding real behavior:
+## Layout
 
-```bash
-make bootstrap BOOTSTRAP_ARGS='--cli-name pluck \
-  --binary-name pluck \
-  --go-module github.com/acme/pluck \
-  --github-owner acme --github-repo pluck \
-  --npm-package @acme/pluck \
-  --description "A fast file picker" \
-  --homepage https://pluck.dev \
-  --canonical-url https://pluck.dev \
-  --license Apache-2.0'
+```text
+cmd/lampo/             Go CLI entrypoint
+internal/app/          Flags, help, version, interrupt handling
+internal/latex/        Project detection and latexmk compilation
+internal/watch/        Recursive filesystem events + source filtering
+internal/preview/      HTTP, SSE, debounced rebuilds, PDF downloads
+internal/preview/web/  Embedded static HTML, JavaScript, CSS, PDF.js
+docs/                 Astro/ZueDocs site (not bundled into CLI)
 ```
 
-The script updates `cmd`, the npm wrapper, `package.json`, `go.mod`, `Makefile`,
-the release workflow, postinstall metadata, and `docs/src/data/docs.ts` together. The
-CLI name and release binary name may be kept equal, or set independently.
-
-## Update package identity
-
-The bootstrap command updates package metadata before publishing:
+## Run the development version
 
 ```bash
-package.json name
-package.json description
-package.json repository
-package.json homepage
-package.json bugs
-package.json keywords
-go.mod module path
+go run ./cmd/lampo /path/to/project/main.tex --no-open --port 3030
 ```
 
-The postinstall script reads repository/package metadata to find release binaries, so stale package metadata can break npm installs.
+When changing HTML, JS, or CSS, restart the Go process to embed the new assets. Restarting isn't necessary when changing the watched **LaTeX project**.
 
-## Replace command logic
-
-The starter app logic lives in:
-
-```bash
-internal/app/app.go
-internal/app/app_test.go
-```
-
-Keep parsing and handlers small at first. Add command-specific help text as command groups grow.
-
-## Keep version plumbing
-
-`internal/buildinfo` exposes the version used by `--version`. Release builds inject the version with Go linker flags.
-
-For local development, the Makefile reads the version from `package.json` and passes it into the build.
-
-## Validate after changes
-
-Run the full local check before pushing:
+## Validate changes
 
 ```bash
 make check
+go test -race ./...
+make build
 make docs-check
 make docs-build
 ```
 
-Run the docs commands serially. Astro can be sensitive to concurrent check/build work in the same repo.
+Run the docs check and docs build serially so Astro doesn't have two processes writing `.astro/` at once.
 
-The default license is Apache-2.0 and needs no extra CLI. Pass `--license MIT`
-(or another value from `license-generator --list`) inside `BOOTSTRAP_ARGS` to
-regenerate `LICENSE` and synchronize the metadata when the optional
-`license-generator` CLI is installed. Without it, bootstrap continues with
-Apache-2.0 and prints a warning.
+## Build model
+
+The server calls `latexmk` with an output directory in the OS temporary folder. A filesystem watcher observes nested source directories and sends coalesced change events. The compiler coordinator cancels superseded builds and publishes a new PDF only after a successful build. The SSE stream carries status updates and revision IDs; the browser loads changed PDF bytes directly and renders them through bundled PDF.js.
+
+Important invariants: never overwrite the user's source files, never serve a partial PDF, retain the last good output on failure, and keep the default server loopback-only.
+
+## Third-party libraries
+
+Lampo uses [fsnotify](https://github.com/fsnotify/fsnotify) for filesystem events and [Mozilla PDF.js](https://mozilla.github.io/pdf.js/) to display PDFs. The prebuilt PDF.js files and its license notice are committed so a released Go binary works completely offline.

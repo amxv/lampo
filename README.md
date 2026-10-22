@@ -1,47 +1,72 @@
-# Lampo
+# Lampo ⚡
 
-Lampo is an upcoming lightweight CLI for live LaTeX previews in the browser, designed for fast editing sessions with coding agents. The goal is to watch `.tex` files and export a finished PDF without leaving the browser.
+**Live LaTeX previews, without leaving your browser.**
 
-**Status: scaffold only.** The real-time renderer, preview server, and PDF export are not implemented yet. The command is a Go starter with a sample `hello` subcommand. No version has been published to npm.
+Lampo is a small, local-first Go CLI that watches a LaTeX project, automatically rebuilds its PDF as you edit, and updates a clean browser preview in place. Designed for people who write `.tex` with their editor or coding agents and want the feedback loop of a web dev server.
 
-## Development
+> **Pre-release:** Lampo works locally on `main`, but the first npm/GitHub binary release has not shipped yet.
+
+## Try it locally
+
+Install Go 1.26+ and a TeX distribution with `latexmk` and `pdflatex` (MacTeX, TeX Live, TinyTeX or MiKTeX). Then:
 
 ```bash
 git clone https://github.com/amxv/lampo.git
 cd lampo
-make check
-make build
-./dist/lampo --help
-./dist/lampo hello
+make install-local
+
+# Anywhere you have a LaTeX project:
+cd ~/path/to/latex-project
+lampo
 ```
 
-## Documentation site
+Lampo opens a browser tab with the PDF preview and prints the local URL in your terminal. Make changes in any editor, or ask your coding agent to edit the project. The browser updates after a successful compilation, without refreshing. Click **Export PDF** to choose a filename and download the result.
 
 ```bash
+lampo                       # Find main.tex or an unambiguous .tex file here
+lampo ./resume/main.tex     # Preview a specific document
+lampo ./paper --port 3030   # Use a fixed localhost port
+lampo main.tex --no-open    # Just print the URL
+lampo main.tex --engine xelatex
+lampo --help
+```
+
+Lampo runs entirely on your machine: no account, uploads, SaaS, telemetry, CDN, Node.js runtime or frontend build step. It embeds the browser UI and PDF.js inside one Go binary, and stores compilation outputs in a temporary directory, leaving your project clean.
+
+## Built for fast iteration
+
+- **Fast change detection:** Native file events with a short debounce; detects updates to nested `.tex`, `.bib`, styles, images and other source assets, including atomic editor saves.
+- **No page reload:** Server-sent events notify the preview when a new PDF is ready. Your browser preserves the preview while the next build runs.
+- **Useful build errors:** Compiler error banner and log panel, without discarding the last good PDF.
+- **Browser controls:** Fit-to-width, zoom, selectable text, clickable external links, a page counter, and named PDF export.
+- **Portable:** Native Go binary for macOS, Windows and Linux; runs against locally installed `latexmk`.
+
+## How it works
+
+```text
+Your editor / coding agent -> .tex files -> fsnotify -> latexmk
+                                                      |
+                                      temporary compiled PDF
+                                                      |
+Browser preview (bundled PDF.js) <- SSE + local HTTP server
+```
+
+LaTeX engines: `pdflatex` (default), `xelatex` and `lualatex`. If the TeX compiler is missing a LaTeX package, install it using your TeX distribution; Lampo displays the compilation error and rebuilds when you save again.
+
+**Privacy:** Lampo binds to `127.0.0.1` on a random free port by default. Only use `--host` to expose it to other machines on a trusted network. As with any LaTeX build, compile only source documents you trust.
+
+## Develop
+
+```bash
+make check
+make build
 make docs-install
-make docs-dev
 make docs-check
 make docs-build
 ```
 
-The site lives in `docs/`, uses Astro and ZueDocs, and is hosted at [lampo.ashray.xyz](https://lampo.ashray.xyz) on Vercel with Cloudflare DNS.
+Source layout: `internal/app/` (CLI), `internal/latex/` (compiler), `internal/watch/` (file watching), `internal/preview/` (HTTP, SSE, embedded UI), `docs/` (Astro/ZueDocs). PDF.js is bundled under `internal/preview/web/vendor/` with its Apache-2.0 license notice.
 
-## Distribution (not released yet)
+When the first release is approved, GitHub Actions will publish native binaries and the `@amxv/lampo` npm wrapper. **No release tag has been created yet.**
 
-The scaffold includes a JavaScript npm shim, a native Go binary installer, and a GitHub Actions release workflow for `@amxv/lampo`. The workflow builds binaries and publishes to npm when a `v*` tag is pushed. Do not tag a release until the actual product and changelog are ready.
-
-## Project layout
-
-- `cmd/lampo/`: Go entrypoint
-- `internal/app/`: starter command logic and tests
-- `bin/lampo.js`: npm shim
-- `scripts/postinstall.js`: native binary installer
-- `.github/workflows/release.yml`: release and npm automation
-- `docs/`: Astro/ZueDocs website
-- `project.config.json`: generated project identity
-
-Bootstrapped from [`amxv/go-cli-template`](https://github.com/amxv/go-cli-template). See [developer documentation](https://lampo.ashray.xyz/docs) and `CONTRIBUTORS.md` for maintenance and release instructions.
-
-## License
-
-Apache-2.0
+Documentation: [lampo.ashray.xyz](https://lampo.ashray.xyz) · Source: [github.com/amxv/lampo](https://github.com/amxv/lampo) · License: Apache-2.0.

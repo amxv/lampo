@@ -1,95 +1,125 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"os/signal"
+	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/amxv/lampo/internal/buildinfo"
+	"github.com/amxv/lampo/internal/preview"
 )
 
 const commandName = "lampo"
 
 var version = buildinfo.CurrentVersion()
 
+// Run starts a local preview and blocks until the user interrupts the CLI.
 func Run(args []string, stdout, stderr io.Writer) error {
-	_ = stderr
-
-	if len(args) == 0 || isHelpArg(args[0]) {
-		printRootHelp(stdout)
-		return nil
-	}
-	if len(args) == 1 && isVersionArg(args[0]) {
-		_, _ = fmt.Fprintf(stdout, "%s %s\n", commandName, version)
-		return nil
-	}
-
-	switch args[0] {
-	case "hello":
-		if len(args) > 1 && isHelpArg(args[1]) {
-			printHelloHelp(stdout)
+	if len(args) == 1 {
+		switch args[0] {
+		case "--help", "-h", "help":
+			printHelp(stdout)
+			return nil
+		case "--version", "-v", "version":
+			_, _ = fmt.Fprintf(stdout, "%s %s\n", commandName, version)
 			return nil
 		}
-		name := "world"
-		if len(args) > 1 {
-			name = strings.TrimSpace(args[1])
-			if name == "" {
-				name = "world"
-			}
+	}
+	options, err := parseOptions(args)
+	if err != nil {
+		return fmt.Errorf("%w (run `lampo --help`)", err)
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	return preview.Serve(ctx, options, stdout, stderr)
+}
+
+func parseOptions(args []string) (preview.Options, error) {
+	options := preview.Options{Path: ".", Host: "127.0.0.1", Open: true, Engine: "pdflatex"}
+	pathSet := false
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		name, value, found := strings.Cut(arg, "=")
+		if !found {
+			name = arg
 		}
-		_, _ = fmt.Fprintf(stdout, "Hello, %s!\n", name)
-		return nil
+		switch name {
+		case "--port", "-p", "--host", "--engine":
+			if !found {
+				i++
+				if i >= len(args) {
+					return options, fmt.Errorf("%s requires a value", name)
+				}
+				value = args[i]
+			}
+			switch name {
+			case "--port", "-p":
+				port, err := strconv.Atoi(value)
+				if err != nil || port < 0 || port > 65535 {
+					return options, fmt.Errorf("invalid port %q (expected 0-65535)", value)
+				}
+				options.Port = port
+			case "--host":
+				options.Host = value
+			case "--engine":
+				options.Engine = value
+			}
+		case "--no-open":
+			options.Open = false
+		case "--open":
+			options.Open = true
+		default:
+			if strings.HasPrefix(arg, "-") {
+				return options, fmt.Errorf("unknown option %q", arg)
+			}
+			if pathSet {
+				return options, fmt.Errorf("only one LaTeX project or file may be specified")
+			}
+			options.Path = arg
+			pathSet = true
+		}
+	}
+	if options.Host == "" {
+		return options, fmt.Errorf("host cannot be empty")
+	}
+	switch options.Engine {
+	case "pdflatex", "xelatex", "lualatex":
 	default:
-		return fmt.Errorf("unknown command %q (run `%s --help`)", args[0], commandName)
+		return options, fmt.Errorf("unknown engine %q (choose pdflatex, xelatex or lualatex)", options.Engine)
 	}
+	return options, nil
 }
 
-func isVersionArg(v string) bool {
-	return v == "--version"
-}
+func printHelp(w io.Writer) {
+	_, _ = fmt.Fprint(w, `Lampo - live LaTeX preview in your browser
 
-func isHelpArg(v string) bool {
-	switch v {
-	case "-h", "--help", "help":
-		return true
-	default:
-		return false
-	}
-}
+Usage:
+  lampo [file.tex | directory] [options]
 
-func printRootHelp(w io.Writer) {
-	writeLines(w,
-		"lampo - live LaTeX preview CLI (starter scaffold)",
-		"",
-		"Usage:",
-		"  lampo [--version]",
-		"  lampo <command> [arguments]",
-		"",
-		"Commands:",
-		"  hello [name]    print a greeting",
-		"",
-		"Examples:",
-		"  lampo --version",
-		"  lampo hello",
-		"  lampo hello agent",
-	)
-}
+Run without a file to open main.tex (or the only .tex file) in the current
+directory. Lampo watches your project, recompiles on save, and instantly
+updates the browser preview. Press Ctrl+C to stop.
 
-func printHelloHelp(w io.Writer) {
-	writeLines(w,
-		"lampo hello - print a greeting",
-		"",
-		"Usage:",
-		"  lampo hello [name]",
-		"",
-		"Examples:",
-		"  lampo hello",
-		"  lampo hello Alice",
-	)
-}
+Options:
+  -p, --port <number>     HTTP port (default: any free port)
+      --host <address>    Bind address (default: 127.0.0.1)
+      --engine <name>     pdflatex (default), xelatex, or lualatex
+      --no-open           Print the URL without opening the browser
+      --open              Open the browser (default)
+  -v, --version           Print the version
+  -h, --help              Show this help
 
-func writeLines(w io.Writer, lines ...string) {
-	for _, line := range lines {
-		_, _ = fmt.Fprintln(w, line)
-	}
+Examples:
+  lampo
+  lampo resume/main.tex
+  lampo ./paper --port 3030
+  lampo article.tex --engine xelatex --no-open
+
+Requires latexmk and your chosen LaTeX engine on PATH (TeX Live or MiKTeX).
+No Node.js, cloud services, or external network connections are required.
+`)
 }

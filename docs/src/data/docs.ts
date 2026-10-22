@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "Lampo",
   strapline: "Live LaTeX, without the wait",
   description:
-    "Lampo is an upcoming lightweight CLI for instant LaTeX previews in the browser and PDF export, designed for agent-driven workflows.",
+    "Lampo is a lightweight local CLI for live LaTeX previews in the browser and one-click PDF export, designed for agent-driven workflows.",
   repoUrl: "https://github.com/amxv/lampo",
   accentColor: "#b45309",
   accentColorDark: "#fbbf24",
@@ -10,12 +10,12 @@ export const siteConfig = {
     {
       title: "Lampo",
       text:
-        "A small, fast live-preview companion for LaTeX projects. Currently in development."
+        "A small, fast and local-first live-preview companion for LaTeX projects."
     },
     {
       title: "Project status",
       text:
-        "The repository and distribution infrastructure are ready; the preview engine and PDF export are not implemented yet."
+        "The live preview works from source. The first npm and native binary release is still being tested."
     },
     {
       title: "Repository",

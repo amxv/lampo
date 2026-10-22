@@ -6,68 +6,46 @@ import (
 	"testing"
 )
 
-func TestRunRootHelp(t *testing.T) {
-	var out bytes.Buffer
-	var errBuf bytes.Buffer
+func TestHelpAndVersion(t *testing.T) {
+	for _, input := range []string{"--help", "help", "-h"} {
+		var out, errors bytes.Buffer
+		if err := Run([]string{input}, &out, &errors); err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(out.String(), "--port") || !strings.Contains(out.String(), "Usage:") {
+			t.Fatalf("incomplete help: %s", out.String())
+		}
+	}
+	var out, errors bytes.Buffer
+	if err := Run([]string{"--version"}, &out, &errors); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(out.String(), "lampo ") {
+		t.Fatalf("unexpected version: %q", out.String())
+	}
+}
 
-	err := Run([]string{"--help"}, &out, &errBuf)
+func TestParseOptions(t *testing.T) {
+	o, err := parseOptions([]string{"paper/main.tex", "--port=3001", "--engine", "xelatex", "--no-open"})
 	if err != nil {
-		t.Fatalf("Run returned error: %v", err)
+		t.Fatal(err)
 	}
-
-	if !strings.Contains(out.String(), "Usage:") {
-		t.Fatalf("expected help output, got: %q", out.String())
+	if o.Path != "paper/main.tex" || o.Port != 3001 || o.Engine != "xelatex" || o.Open {
+		t.Fatalf("unexpected options: %+v", o)
 	}
-	if !strings.Contains(out.String(), "--version") {
-		t.Fatalf("expected --version in help output, got: %q", out.String())
-	}
-}
-
-func TestRunVersion(t *testing.T) {
-	var out bytes.Buffer
-	var errBuf bytes.Buffer
-
-	err := Run([]string{"--version"}, &out, &errBuf)
-	if err != nil {
-		t.Fatalf("Run returned error: %v", err)
-	}
-
-	if !strings.Contains(out.String(), "lampo ") {
-		t.Fatalf("unexpected version output: %q", out.String())
+	defaultOptions, err := parseOptions(nil)
+	if err != nil || defaultOptions.Path != "." || defaultOptions.Host != "127.0.0.1" || !defaultOptions.Open {
+		t.Fatalf("unexpected defaults: %+v, %v", defaultOptions, err)
 	}
 }
 
-func TestRunHello(t *testing.T) {
-	var out bytes.Buffer
-	var errBuf bytes.Buffer
-
-	err := Run([]string{"hello", "Codex"}, &out, &errBuf)
-	if err != nil {
-		t.Fatalf("Run returned error: %v", err)
-	}
-
-	got := out.String()
-	if got != "Hello, Codex!\n" {
-		t.Fatalf("unexpected output: %q", got)
-	}
-}
-
-func TestRunUnknownCommand(t *testing.T) {
-	var out bytes.Buffer
-	var errBuf bytes.Buffer
-
-	err := Run([]string{"unknown"}, &out, &errBuf)
-	if err == nil {
-		t.Fatal("expected error for unknown command")
-	}
-}
-
-func TestRunVersionSubcommandUnknown(t *testing.T) {
-	var out bytes.Buffer
-	var errBuf bytes.Buffer
-
-	err := Run([]string{"version"}, &out, &errBuf)
-	if err == nil {
-		t.Fatal("expected error for version subcommand")
+func TestParseErrors(t *testing.T) {
+	for _, args := range [][]string{
+		{"--bad"}, {"--port", "foo"}, {"--port", "65536"}, {"--port"},
+		{"--engine", "bad"}, {"first.tex", "second.tex"}, {"--host="},
+	} {
+		if _, err := parseOptions(args); err == nil {
+			t.Errorf("expected error for %q", args)
+		}
 	}
 }
