@@ -4,7 +4,7 @@ Guidance for coding agents working in `lampo`.
 
 ## Purpose
 
-Lampo is a local-first live LaTeX preview CLI, with a Go backend and an embedded PDF.js browser UI. The first public release is pending dogfooding; do not push version tags until the user approves a release.
+Lampo is a local-first live LaTeX preview CLI, with a Go backend and an embedded PDF.js browser UI. Public releases are tag-driven; do not create or push new version tags without explicit user approval.
 
 ## Architecture
 
@@ -88,7 +88,7 @@ Release pipeline triggers on `v*` tags and expects:
 
 Lampo includes:
 
-- `docs/src/content/docs/changelog.md` with unreleased notes until the first release is approved.
+- `docs/src/content/docs/changelog.md` with versioned release notes.
 - `.agents/skills/release/SKILL.md` as a release checklist that updates the changelog before tagging.
 
 Before each release, update the changelog manually. Run checks and docs

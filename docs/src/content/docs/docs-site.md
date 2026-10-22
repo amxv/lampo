@@ -1,70 +1,59 @@
 ---
-title: Docs site maintenance
-description: Run, edit, validate, and deploy Lampo's ZueDocs-powered documentation site.
-order: 5
+title: Docs website
+description: Development, structure, and deployment of lampo.ashray.xyz.
+order: 22
 category: Reference
-summary: Developer notes for maintaining the Astro docs app alongside the Go CLI.
+summary: Maintain the Astro docs site and ship updates to Vercel.
 ---
 
-## Local development
+Lampo's website is a separate static Astro project in `docs/`. It is not part of the CLI runtime or npm binary. The docs pages use the shared ZueDocs shell; the homepage has its own purpose-built design.
 
-Install dependencies and start Astro:
+## Local website development
+
+From the repository root:
 
 ```bash
 make docs-install
 make docs-dev
 ```
 
-Astro serves the docs locally, usually at `http://localhost:4321`.
+Astro normally serves at `http://localhost:4321`.
 
-## Files to edit
+## Main files
 
-The docs site is intentionally small:
-
-```bash
-docs/package.json              # isolated docs dependencies and scripts
-docs/astro.config.mjs          # Astro config
-docs/src/data/docs.ts          # site name, repo URL, nav, categories
-docs/src/pages/index.astro     # landing page
-docs/src/pages/docs/index.astro # docs index
-docs/src/pages/docs/[...slug].astro # article route
-docs/src/content/docs/*.md     # documentation pages
-docs/src/styles/global.css     # shared ZueDocs import
-docs/vercel.json               # deployment config
+```text
+docs/src/pages/index.astro        Custom homepage and preview illustration
+docs/src/styles/landing.css       Homepage typography, colors, layout, motion
+docs/src/pages/docs/index.astro   Friendly documentation hub
+docs/src/pages/docs/[...slug].astro  Individual guide layout
+docs/src/styles/docs-theme.css    Visual styling for the ZueDocs shell
+docs/src/content/docs/*.md       User guides and technical reference
+docs/src/data/docs.ts            Site title, navigation, categories
+docs/astro.config.mjs            Astro and ZueDocs integration
 ```
 
-For most updates, edit markdown in `docs/src/content/docs` first.
+Each guide declares its title, description, ordering, and category in the Markdown frontmatter. The categories are **Get started**, **Guides**, and **Reference**. Keep basic task-focused explanations in the first two categories, and move maintainers' and implementation details into Reference.
 
-## ZueDocs package usage
-
-This site imports the shared docs shell from `zuedocs`:
-
-```astro
-import BaseLayout from "zuedocs/layouts/BaseLayout.astro";
-import DocsPageLayout from "zuedocs/layouts/DocsPageLayout.astro";
-```
-
-Local repos should keep their own docs content and `docs/src/data/docs.ts`, while shared shell behavior belongs in the `zuedocs` package.
-
-## Validate changes
-
-Run:
+## Quality checks
 
 ```bash
 make docs-check
 make docs-build
 ```
 
-Run these commands serially. Do not run Astro check and build concurrently in the same repo.
+Run them one after another rather than in parallel. The build creates static HTML in `docs/dist/`, including raw Markdown docs routes for compatible readers and agent clients.
 
-## Deployment
+## Deploy to Vercel
 
-The docs site builds to static output in `docs/dist`:
+The Vercel project uses `docs` as its root directory. Its `vercel.json` already defines installation, build, and output settings.
+
+Deploy through the Vercel Git integration when configured, or from the linked docs directory:
 
 ```bash
-make docs-build
+cd docs
+vercel --prod
 ```
 
-For Vercel, use `docs` as the Root Directory. The committed `docs/vercel.json`
-installs and builds the isolated docs workspace and serves `docs/dist` without
-sharing the Go CLI's root `dist/` directory.
+The canonical domain is [lampo.ashray.xyz](https://lampo.ashray.xyz). After deployment, verify the homepage, guide navigation, mobile layout, and links to GitHub/npm.
+
+The repository's [release workflow](/docs/release-and-npm) is separate from website deployment. A docs-only change does not require a new CLI version.

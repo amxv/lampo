@@ -1,21 +1,17 @@
 export const siteConfig = {
   name: "Lampo",
-  strapline: "Live LaTeX, without the wait",
+  strapline: "LaTeX, now in real time",
   description:
-    "Lampo is a lightweight local CLI for live LaTeX previews in the browser and one-click PDF export, designed for agent-driven workflows.",
+    "Instant LaTeX previews in your browser. Keep your editor, see every save, export the finished PDF.",
   repoUrl: "https://github.com/amxv/lampo",
-  accentColor: "#b45309",
-  accentColorDark: "#fbbf24",
+  logoHref: "/favicon.svg",
+  accentColor: "#ae6539",
+  accentColorDark: "#f5c85c",
   footerSections: [
     {
       title: "Lampo",
       text:
-        "A small, fast and local-first live-preview companion for LaTeX projects."
-    },
-    {
-      title: "Project status",
-      text:
-        "The live preview works from source. The first npm and native binary release is still being tested."
+        "A little lightning for your LaTeX. Open source, local-first, and made for the joy of writing."
     },
     {
       title: "Repository",
@@ -27,13 +23,12 @@ export const siteConfig = {
 } as const;
 
 export const docCategories = [
-  "Start",
-  "Development",
-  "Distribution",
+  "Get started",
+  "Guides",
   "Reference"
 ] as const;
 
 export const primaryNav = [
-  { href: "/docs", label: "Docs" },
+  { href: "/docs", label: "Guides" },
   { href: siteConfig.repoUrl, label: "GitHub", external: true }
 ];

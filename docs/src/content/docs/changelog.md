@@ -1,31 +1,20 @@
 ---
 title: Changelog
-description: "Release notes for this CLI."
-order: 99
-category: Distribution
-summary: Upcoming release notes. No version has been published yet.
+description: What changed in released versions of Lampo.
+order: 24
+category: Reference
+summary: Release history for the Lampo CLI.
 ---
 
-Lampo has not shipped its first release. The Go preview CLI is implemented on `main` and is being tested before tagging.
+## 0.1.0 — October 23, 2026
 
-## Unreleased - 0.1.0 candidate
+The first public release of Lampo.
 
-- Local watch/compile loop for TeX projects, with automatic root-file discovery.
-- Embedded PDF.js browser preview with live updates, zoom, text selection and PDF export.
-- Instant, redraw-free window resizing for smooth browser split-screen layouts.
-- Retina-sharp text at any preview width, with asynchronous per-page rendering once resizing stops.
-- Searchable same-tab document switcher with automatic standalone `.tex` discovery, per-document PDF caching, and live updates when files are added or removed.
-- Compiler error feedback that preserves the last successful PDF.
-- Portable Go CLI and npm wrapper, with release publication pending testing.
+- **Live LaTeX preview:** A local browser viewer that recompiles your document as you save.
+- **Multiple documents:** A searchable filename dropdown, automatic discovery of standalone `.tex` files, and per-document PDF caching.
+- **Fast and sharp:** Instant resize, crisp high-density rendering, text selection, and clickable PDF links.
+- **PDF export:** Download the latest successful PDF with a filename of your choice.
+- **Reliable edits:** Display build errors without losing your last working preview.
+- **Native CLI:** macOS, Windows, and Linux binaries, distributed through GitHub Releases and `@amxv/lampo` on npm.
 
-## Maintainer notes
-
-When adding future entries:
-
-- Keep the newest version at the top.
-- Add sections only for version tags that exist.
-- Summarize code and product changes from `main` since the previous version tag.
-- This is an OSS template, so internal code changes may be included when useful.
-- Do not include docs-site-only changes such as site styling, docs package bumps, deploy plumbing, footer/layout changes, or documentation navigation changes.
-- Rewrite commit subjects into clear release notes instead of pasting raw commit messages.
-- If a release contains only tagging/release metadata, write: `Maintenance release. No direct code behavior changes beyond release preparation.`
+See the [quickstart](/docs/quickstart) for a two-minute introduction.

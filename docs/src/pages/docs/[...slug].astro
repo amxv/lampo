@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import BaseLayout from "zuedocs/layouts/BaseLayout.astro";
 import DocsPageLayout from "zuedocs/layouts/DocsPageLayout.astro";
 import { docCategories, primaryNav, siteConfig } from "../../data/docs";
+import "../../styles/docs-theme.css";
 
 const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
 
@@ -23,6 +24,9 @@ const grouped = docCategories
     entries: docs.filter((doc) => doc.data.category === category)
   }))
   .filter((group) => group.entries.length > 0);
+const sidebarGroups = entry.data.category === "Reference"
+  ? grouped
+  : grouped.filter((group) => group.category !== "Reference");
 ---
 
 <BaseLayout
@@ -34,7 +38,7 @@ const grouped = docCategories
   <section class="shell docs-shell">
     <aside class="docs-sidebar">
       <p class="docs-sidebar__eyebrow">Docs map</p>
-      {grouped.map((group) => (
+      {sidebarGroups.map((group) => (
         <div class="docs-sidebar__group">
           <p>{group.category}</p>
           <ul>
@@ -51,6 +55,9 @@ const grouped = docCategories
           </ul>
         </div>
       ))}
+      {entry.data.category !== "Reference" && (
+        <a class="lp-docs-sidebar-reference" href="/docs/command-reference">Browse reference <span aria-hidden="true">↗</span></a>
+      )}
     </aside>
 
     <article class="docs-article">

@@ -1,46 +1,49 @@
 ---
 import { getCollection } from "astro:content";
 import BaseLayout from "zuedocs/layouts/BaseLayout.astro";
-import { docCategories, primaryNav, siteConfig } from "../../data/docs";
+import { primaryNav, siteConfig } from "../../data/docs";
+import "../../styles/docs-theme.css";
 
 const entries = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
-const grouped = docCategories.map((category) => ({
-  category,
-  entries: entries.filter((entry) => entry.data.category === category)
-}));
+const guides = entries.filter((entry) => entry.data.category === "Guides");
+const references = entries.filter((entry) => entry.data.category === "Reference");
 ---
 
 <BaseLayout
-  title={`${siteConfig.name} Docs`}
-  description="Development and release documentation for the Lampo CLI scaffold."
+  title="Lampo Docs | Get started in two minutes"
+  description="Start a live LaTeX preview, make changes in any editor, and export a PDF. Everything you need to use Lampo."
   siteConfig={siteConfig}
   primaryNav={primaryNav}
 >
-  <section class="shell docs-index-hero">
-    <p class="section-label">Documentation</p>
-    <h1>Lampo developer documentation.</h1>
-    <p>
-      The project is a scaffold today. These guides cover development, the starter
-      command, npm distribution, and release automation while the live LaTeX preview
-      engine is being built.
-    </p>
+  <section class="shell lp-guide-hero">
+    <div class="lp-guide-hero__copy">
+      <p class="lp-guide-eyebrow"><span></span> YOUR GUIDE TO LAMPO</p>
+      <h1>Less setup.<br /><em>More creating.</em></h1>
+      <p>From your first live preview to the finished PDF. Everything you need to feel at home with Lampo.</p>
+      <a href="/docs/quickstart" class="lp-guide-primary">Get started <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="lp-guide-hero__aside" aria-hidden="true">
+      <div class="lp-guide-hero__terminal"><span class="lp-guide-hero__terminal-top"><i></i><i></i><i></i> YOUR TERMINAL</span><code><span>$</span> lampo</code><div><span></span> Preview ready at localhost</div></div>
+      <div class="lp-guide-hero__paper"><span>IDEAS BECOME PAGES</span><strong>Start<br /><em>somewhere.</em></strong><i></i><i></i><i></i></div>
+      <span class="lp-guide-hero__bolt">✳</span>
+    </div>
   </section>
-  <section class="shell docs-index">
-    {grouped.map((group) => (
-      <section class="docs-index__group">
-        <div class="docs-index__group-head">
-          <p class="section-label">{group.category}</p>
-        </div>
-        <div class="docs-index__cards">
-          {group.entries.map((entry) => (
-            <a class="docs-index__card" href={`/docs/${entry.id}`}>
-              <h2>{entry.data.title}</h2>
-              <p>{entry.data.description}</p>
-              <span>Open guide</span>
-            </a>
-          ))}
-        </div>
-      </section>
-    ))}
+
+  <section class="shell lp-guide-section">
+    <div class="lp-guide-heading"><span>01 / THE BASICS</span><h2>You'll be up and running in no time.</h2></div>
+    <div class="lp-guide-card-grid">
+      <a class="lp-guide-card lp-guide-card--featured" href="/docs/quickstart"><span>01 / START HERE</span><h3>Your first live preview</h3><p>Install Lampo, open a LaTeX folder, and watch your first PDF appear.</p><span class="lp-guide-card__arrow" aria-hidden="true">↗</span></a>
+      {guides.map((guide, index) => (
+        <a class="lp-guide-card" href={`/docs/${guide.id}`}><span>{String(index + 2).padStart(2, "0")} / YOUR WORKFLOW</span><h3>{guide.data.title}</h3><p>{guide.data.summary ?? guide.data.description}</p><span class="lp-guide-card__arrow" aria-hidden="true">↗</span></a>
+      ))}
+    </div>
+  </section>
+
+  <section class="shell lp-reference-section">
+    <div><p>02 / GOING DEEPER</p><h2>Reference &amp; <em>under the hood.</em></h2><span>CLI options, development notes, and release details, whenever you need them.</span></div>
+    <details class="lp-reference-details">
+      <summary>Explore technical reference <span aria-hidden="true">＋</span></summary>
+      <ul>{references.map((entry) => <li><a href={`/docs/${entry.id}`}>{entry.data.title}<span aria-hidden="true">↗</span></a></li>)}</ul>
+    </details>
   </section>
 </BaseLayout>

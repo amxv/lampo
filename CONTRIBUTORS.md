@@ -1,100 +1,50 @@
-# CONTRIBUTORS.md
+# Contributing to Lampo
 
-Maintainer notes for this template repository.
+Thanks for helping make LaTeX feel a little more like modern web development. Lampo is a small, local-first CLI, and the best contributions keep it fast, predictable, and easy to use.
 
-## Prerequisites
+## Start here
 
-- Go `1.26+`
-- Node `18+`
-- Bun `1+`
-- optional `license-generator` for non-Apache license changes
-- npm account with publish rights for the package name in `package.json`
-- GitHub repo admin access
-
-## Local development
+You'll need Go 1.26+, Node.js 18+, and Bun for the separate documentation website. To preview real LaTeX, install a TeX distribution with `latexmk`.
 
 ```bash
+git clone https://github.com/amxv/lampo.git
+cd lampo
 make check
 make build
 ./dist/lampo --help
 ```
 
-Install command locally:
+You can install your local binary with `make install-local`.
 
-```bash
-make install-local
-lampo --help
-```
+## Where things live
 
-For a new CLI, use the bootstrap flow so the command, module, repository,
-npm package, release metadata, docs config, and license stay synchronized:
+| Area | Path |
+| --- | --- |
+| CLI flags and process lifetime | `internal/app/` |
+| Finding documents and compiling LaTeX | `internal/latex/` |
+| File changes and rebuilds | `internal/watch/`, `internal/preview/` |
+| Browser PDF preview and controls | `internal/preview/web/` |
+| Website and user guides | `docs/` |
 
-```bash
-make bootstrap BOOTSTRAP_ARGS='--cli-name pluck --go-module github.com/acme/pluck \
-  --github-owner acme --github-repo pluck --npm-package @acme/pluck'
-```
+The CLI embeds its browser interface into the Go binary. Keep runtime dependencies minimal and avoid adding a frontend framework for simple UI behaviors.
 
-## Release process
+## Before opening a PR
 
-1. Ensure `main` is green and the docs pass serially:
+Run the checks that apply to your change:
 
 ```bash
 make check
+go test -race ./...
 make docs-check
 make docs-build
 ```
 
-2. Edit `docs/src/content/docs/changelog.md` manually, then commit and push it:
+Run docs checking and building **serially**, not concurrently. For UI changes, test the live preview at both wide and narrow browser widths. For watch/build changes, test an edit, a compile error, a recovery, and switching between multiple documents.
 
-```bash
-git add docs/src/content/docs/changelog.md
-git commit -m "docs: update changelog for v0.1.0"
-git push origin HEAD
-```
+Please keep private LaTeX content out of public test fixtures. Generated PDFs, LaTeX auxiliary files, and temporary build outputs should never end up in Git.
 
-3. Push the version tag. The low-level Make target is optional:
+## Releasing
 
-```bash
-make release-tag VERSION=0.1.0
-# or: git tag v0.1.0 && git push origin v0.1.0
-```
+Release tags are maintained by the repository owner. The full workflow, including GitHub binary assets and npm publication, is in the [release reference](https://lampo.ashray.xyz/docs/release-and-npm).
 
-4. GitHub Actions `release` workflow runs automatically:
-- quality checks
-- cross-platform binary build
-- GitHub release publish
-- npm publish
-
-## Required GitHub secret
-
-- `NPM_TOKEN`: npm automation token with publish rights for your package.
-
-Configure it once in the repository settings or with `gh secret set NPM_TOKEN`.
-The template does not read local keychains or synchronize release secrets.
-
-## npm token setup
-
-Create token at npm:
-
-- Profile -> Access Tokens -> Create New Token
-- Use an automation/granular token scoped to required package/org
-
-Validate npm auth locally with your normal npm tooling if needed. Do not print
-the token.
-
-## Notes on package naming
-
-Before first publish, set a package name you control in `package.json`.
-
-- Example unscoped: `"name": "your-cli-name"`
-- Example scoped: `"name": "@your-scope/your-cli-name"`
-
-The default license is Apache-2.0 and does not require `license-generator`. Use
-`make bootstrap BOOTSTRAP_ARGS='--license MIT'` (or another name from
-`license-generator --list`) to regenerate `LICENSE` and synchronize the package
-and docs metadata when the optional CLI is installed. Without it, bootstrap
-continues with Apache-2.0 and prints a warning.
-
-For a private GitHub repository, release assets require authenticated downloads.
-The normal anonymous npm path is a public repository; use the explicit
-`--anonymous-npm` warning before choosing a private repo for that flow.
+Lampo is Apache-2.0 licensed. Contributions to its existing codebase follow that license.

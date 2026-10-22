@@ -3,7 +3,7 @@ import zuedocs from "zuedocs/astro";
 
 export default defineConfig({
   output: "static",
-  site: "https://github.com/amxv/lampo",
+  site: "https://lampo.ashray.xyz",
   integrations: [zuedocs()],
   vite: {
     build: {

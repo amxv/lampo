@@ -1,82 +1,56 @@
 ---
-title: Release and npm publishing
-description: Understand the tag-driven GitHub release workflow and the npm wrapper package contract.
-order: 3
-category: Distribution
-summary: How native binaries, GitHub releases, and npm publishing fit together.
+title: Release & distribution
+description: Tag-driven GitHub binaries, npm publication, and installer behavior.
+order: 23
+category: Reference
+summary: Maintainer guide to shipping native binaries and @amxv/lampo on npm.
 ---
 
-## Release trigger
+Lampo publishes a single Go CLI for macOS, Linux, and Windows. The `@amxv/lampo` npm package installs the matching prebuilt binary from GitHub Releases.
 
-The release workflow runs when a `v*` tag is pushed. Prepare the changelog and
-tag from the repository root:
+## First-party release pipeline
+
+The release workflow lives at `.github/workflows/release.yml`. Pushing a `v*` tag starts four jobs:
+
+1. **Quality:** Run Go tests, `go vet`, and Node shim checks.
+2. **Build:** Cross-compile native binaries for macOS, Linux, and Windows on amd64 and arm64.
+3. **GitHub Release:** Attach all build assets to the tagged release.
+4. **npm:** Publish `@amxv/lampo` using the `NPM_TOKEN` GitHub Actions secret.
+
+Release assets use the exact `<binary>_<goos>_<goarch>[.exe]` convention, for example `lampo_darwin_arm64` or `lampo_windows_amd64.exe`. The npm installer and GitHub Action must keep these filenames synchronized.
+
+## Cut a release
+
+Update `docs/src/content/docs/changelog.md` with the actual user-facing behavior of the release. Then run:
 
 ```bash
 make check
 make docs-check
 make docs-build
-# edit docs/src/content/docs/changelog.md
-git add docs/src/content/docs/changelog.md
-git commit -m "docs: update changelog for v0.2.0"
-git push origin HEAD
-make release-tag VERSION=0.2.0
+git add .
+git commit -m "chore: prepare release"
+git push origin main
+make release-tag VERSION=0.1.0
 ```
 
-The changelog is intentionally edited and reviewed by the agent or maintainer.
-`make release-tag` only creates and pushes the tag. GitHub Actions performs the
-release work after the tag arrives.
+Replace `0.1.0` with the next intended version. A tag triggers publication, so only push it after the checks pass and the release is approved.
 
-## What the workflow does
-
-The GitHub Actions workflow:
-
-1. runs Go and Node quality checks
-2. builds native binaries for supported OS/architecture targets
-3. uploads binaries to a GitHub Release
-4. publishes the npm package with the version from the tag
-
-The npm package itself stays small. It contains the JavaScript shim, postinstall script, Go source, and project files needed for fallback local builds.
-
-## Binary asset names
-
-Release assets use this shape:
+## Verify the release
 
 ```bash
-<binary>_<goos>_<goarch>[.exe]
+gh run list -R amxv/lampo --limit 5
+gh release view v0.1.0 -R amxv/lampo
+npm view @amxv/lampo version
 ```
 
-Examples:
+For end-to-end validation, install the published npm package in a clean temporary directory and confirm that `lampo --version` runs. A real LaTeX project also requires a local TeX distribution with `latexmk`.
 
-```bash
-lampo_darwin_arm64
-lampo_linux_amd64
-lampo_windows_amd64.exe
-```
+## Installer fallback
 
-Do not change this naming convention unless you update the workflow and `scripts/postinstall.js` together.
+The npm package contains a JavaScript shim and an installation script. When a release binary is available, the postinstall script downloads it into the package's `bin/` directory. If the download fails, it attempts a local Go build when a supported Go toolchain and the source files are present.
 
-## npm install behavior
+The Go module, source files, and PDF.js assets are included in the npm fallback package. The browser UI does not use npm, Node, or an external CDN at runtime.
 
-After npm install, `scripts/postinstall.js` tries to download the right native binary from GitHub Releases.
+## Credentials and permissions
 
-If the download cannot be completed, it falls back to building locally with Go when possible.
-
-## Required secret
-
-Publishing to npm requires this GitHub secret:
-
-```bash
-NPM_TOKEN
-```
-
-Make sure the package name in `package.json` is available and publishable before tagging a release.
-
-Lampo is licensed Apache-2.0. PDF.js is distributed with its corresponding
-Apache-2.0 license notice in the bundled browser assets.
-
-## Repository visibility
-
-The normal npm and release path assumes a public GitHub repository so postinstall
-can download release assets anonymously. If a project explicitly chooses a
-private repository with anonymous npm installation expectations, it must arrange
-authenticated or bundled assets in the shipping workflow.
+The GitHub repository must have `NPM_TOKEN` configured as an Actions secret with publish access to the npm package. GitHub Actions also requires permission to create and upload release assets. Never commit credentials or tokens to the repository.

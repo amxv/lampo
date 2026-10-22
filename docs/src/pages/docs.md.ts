@@ -7,7 +7,8 @@ export async function GET() {
   const lines = [
     `# ${siteConfig.name} Docs`,
     "",
-    "This is the raw markdown index for the documentation routes.",
+    "Install Lampo, see every LaTeX change in your browser, and export a finished PDF.",
+    "Begin with Get started and use the reference pages when you need CLI or implementation details.",
     ""
   ];
 

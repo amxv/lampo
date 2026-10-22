@@ -1,53 +1,80 @@
 ---
-title: Command reference
-description: Lampo CLI options, project detection, and preview behavior.
-order: 4
+title: CLI reference
+description: Every Lampo command option, document selection rule, and runtime detail.
+order: 20
 category: Reference
-summary: Flags and examples for local LaTeX preview sessions.
+summary: Flags, entrypoint detection, LaTeX engines, network access, and how updates work.
 ---
 
-## Usage
+## Command syntax
 
 ```bash
 lampo [file.tex | directory] [options]
 ```
 
-Without arguments, Lampo previews the current working directory. It discovers standalone `.tex` entrypoints recursively, ignores helper snippets, and prefers root-level `main.tex` as the initial preview. If there are several roots and no `main.tex`, it chooses the first alphabetically. All detected documents remain available from the toolbar's searchable filename dropdown. An explicit `.tex` path selects that file first.
+Lampo starts a local HTTP server, watches your source tree, runs `latexmk`, and displays the compiled PDF in your browser. Use **Ctrl+C** to stop it.
 
-| Option | Default | Behavior |
+| Option | Default | Description |
 | --- | --- | --- |
-| `-p`, `--port NUMBER` | Free port | Set a fixed HTTP port (0 means random) |
-| `--host ADDRESS` | `127.0.0.1` | Bind to another network address |
-| `--engine NAME` | `pdflatex` | Choose `pdflatex`, `xelatex`, or `lualatex` |
-| `--no-open` | Off | Print the URL but don't open a browser |
-| `--open` | On | Open the browser when starting |
-| `-h`, `--help` | | Show help and usage examples |
-| `-v`, `--version` | | Display the current binary version |
+| `-p`, `--port <number>` | Random available port | Choose a fixed TCP port. `0` means any free port. |
+| `--host <address>` | `127.0.0.1` | Address on which the preview listens. |
+| `--engine <name>` | `pdflatex` | `pdflatex`, `xelatex`, or `lualatex`. |
+| `--no-open` | Off | Print the URL without opening a browser tab. |
+| `--open` | On | Open the preview in your default browser. |
+| `-v`, `--version` | | Print the installed version. |
+| `-h`, `--help` | | Print the command reference and examples. |
 
-Options can be placed before or after the project path.
-
-## Examples
+Options can appear before or after the directory or document path.
 
 ```bash
 lampo
-lampo /path/to/resume/main.tex
-lampo ./research --port 4444
-lampo paper.tex --engine lualatex --no-open
+lampo paper.tex
+lampo ./applications --port 3030
+lampo ./thesis/main.tex --engine xelatex --no-open
 ```
 
-## Watching and compilation
+## Selecting the document root
 
-- Saves to `.tex`, `.bib`, `.sty`, `.cls`, figures and other source asset types trigger builds; new nested directories are watched automatically.
-- New standalone documents appear in the dropdown automatically, including roots in subfolders. Two documents with the same filename are distinguished by their relative directories. Removing the selected document switches back to `main.tex` or the next available root.
-- Switching selects the correct cached PDF instantly, or compiles the file once if necessary. Every root has a separate auxiliary build directory to avoid output collisions.
-- Press `/` to search the document menu, use arrow keys to navigate, and press Enter to switch. Escape closes the menu.
-- Short, burst-coalescing delays prevent duplicate rebuilds during editor saves. Superseded builds are canceled.
-- Only fully compiled PDFs appear in the browser. If a build fails, the previous PDF remains readable and the error log is available.
-- Window resizing and zoom respond immediately by transforming existing layers. After interaction settles, PDF.js renders fresh, crisp text at the final scale and display's pixel density, replacing one completed page at a time without blanking or moving the preview. Intermediate resize frames never trigger expensive redraws.
-- Auxiliary build files live outside the source directory and are removed when the server stops.
+Lampo scans the project recursively and recognizes standalone `.tex` files by `\documentclass` or legacy `\documentstyle`. It ignores hidden directories and common generated folders such as `.git`, `node_modules`, and `dist`.
 
-The browser uses bundled Mozilla PDF.js; communication is over local HTTP and server-sent events. Lampo does not require Node.js at runtime and makes no requests to a cloud service.
+It chooses the initial document in this order: an explicitly provided `.tex` file, `main.tex` at the project root, or the first discovered root alphabetically. For a directory with just one `.tex` file, that file is accepted even without a document declaration.
 
-## Security
+Subfiles referenced with `\input` and `\include` are watched, but they aren't separate items in the document picker. Entry points in nested directories appear in the dropdown with their relative folder names when relevant.
 
-The default listener accepts local connections (`127.0.0.1`). `--host 0.0.0.0` exposes the preview and PDF to anyone who can reach that port, so only use it on trusted networks. Lampo does not sandbox LaTeX itself; compile trusted sources.
+The browser's **/** shortcut opens the document picker. Choose a file to switch without navigating away from the preview.
+
+## Compilation and cache
+
+- Lampo uses the `latexmk` binary and your selected LaTeX engine from PATH. LaTeX itself is not bundled with Lampo.
+- Filesystem events detect edits to `.tex`, `.bib`, `.sty`, `.cls`, images, and other common inputs, including newly created nested directories.
+- Saves are briefly coalesced, so an editor's burst of writes doesn't start unnecessary parallel builds.
+- Each standalone document gets its own temporary `latexmk` output directory and cached last-good PDF. Switching back to a cached document is immediate until the cache is invalidated by a source change.
+- A failed build retains the previous successful preview, and the full compiler output is available from the status indicator.
+- Temporary build files are outside the project and are deleted when Lampo stops cleanly.
+
+## Browser preview
+
+The browser UI uses the bundled PDF.js renderer. The server sends build status and revision events over Server-Sent Events (SSE); the browser requests new PDF bytes when a successful revision is published.
+
+Resizing is immediate because the existing rendered layers are transformed in place. After the resize settles, Lampo re-renders pages at the new size and the device's pixel density for sharp text. Text selection, PDF links, zoom, and named downloads remain available.
+
+## Local endpoints
+
+Lampo serves a small HTTP API on the same local port as the preview:
+
+| Endpoint | Behavior |
+| --- | --- |
+| `GET /` | Embedded browser viewer. |
+| `GET /api/status` | Selected document, document list, revision, and build status. |
+| `GET /events` | SSE notifications for changes and builds. |
+| `POST /api/select` | Switch documents using a discovered document ID. |
+| `GET /preview.pdf` | Current document's last successful PDF. |
+| `GET /api/export?filename=…` | Download the selected PDF using a chosen filename. |
+
+## Security and privacy
+
+By default, the server binds to `127.0.0.1`. It is accessible only from your own computer. `--host 0.0.0.0` is explicitly for trusted networks: other machines on that network may be able to read your previews and documents. Lampo does not authenticate preview clients or sandbox the LaTeX compiler.
+
+Compile only LaTeX projects you trust. No project content is uploaded by Lampo, and the UI does not depend on a cloud service or external JavaScript CDN.
+
+See [developer reference](/docs/customize-cli) for architecture and testing commands.

@@ -1,156 +1,264 @@
 ---
-import { getCollection } from "astro:content";
-import BaseLayout from "zuedocs/layouts/BaseLayout.astro";
-import { primaryNav, siteConfig } from "../data/docs";
+import "../styles/landing.css";
 
-const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
+const install = "npm install -g @amxv/lampo";
 
-const proofPoints = [
+const steps = [
   {
-    title: "Live feedback",
-    body: "Save a .tex file and the preview quietly refreshes itself. No manual builds, no page reload."
+    number: "01",
+    title: "One command. One tab.",
+    text: "Run lampo in your LaTeX folder. Your browser opens to a live preview, ready when you are.",
+    note: "$ lampo"
   },
   {
-    title: "One terminal command",
-    body: "Run lampo in your project directory to start a tiny localhost server and open your browser."
+    number: "02",
+    title: "Stay in your flow.",
+    text: "Write in any editor, or let your coding agent make changes. Every save appears in the preview.",
+    note: "↳ changes detected"
   },
   {
-    title: "Export when ready",
-    body: "Choose a filename and download a crisp PDF straight from the preview toolbar."
-  },
-  {
-    title: "Agent-friendly by design",
-    body: "Work across multiple standalone documents and included files, switching previews from one small searchable menu."
+    number: "03",
+    title: "Make it official.",
+    text: "See the finished layout, refine it, then export a beautifully crisp PDF in a click.",
+    note: "↓ export PDF"
   }
-];
-
-const workflows = [
-  "Watch LaTeX source, included chapters, bibliographies and figures across the entire project.",
-  "Debounce saves, compile with latexmk, and stream updates over local HTTP.",
-  "Keep the last good PDF in view, even when an edit breaks the build.",
-  "Switch among cached documents, zoom, follow links and export a named PDF."
 ];
 ---
 
-<BaseLayout
-  title={`${siteConfig.name} | ${siteConfig.strapline}`}
-  description={siteConfig.description}
-  siteConfig={siteConfig}
-  primaryNav={primaryNav}
->
-  <section class="hero shell">
-    <div class="hero__copy">
-      <p class="section-label">Introducing Lampo · Source preview available</p>
-      <h1>LaTeX at the speed of thought.</h1>
-      <p class="hero__lede">
-        A tiny command-line tool for an instant, always-open LaTeX preview in your browser.
-        Edit the source, watch it update, and export the finished PDF when you're done.
-      </p>
-      <p class="hero__annotation">
-        Built with coding agents in mind. The preview works today from source, with the first public binary release coming after testing.
-      </p>
-      <div class="hero__actions">
-        <a class="button button--solid" href="https://github.com/amxv/lampo">View on GitHub</a>
-        <a class="button button--ghost" href="/docs">Developer docs</a>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f4ef" />
+    <meta name="description" content="Lampo gives LaTeX the live preview it deserves. One command, instant browser updates, multiple documents, and beautiful PDF export. Free and open source." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Lampo — LaTeX, now in real time." />
+    <meta property="og:description" content="The tiny local-first CLI that brings instant PDF previews to your favorite editor." />
+    <meta property="og:url" content="https://lampo.ashray.xyz" />
+    <meta property="og:image" content="https://lampo.ashray.xyz/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://lampo.ashray.xyz/og.jpg" />
+    <link rel="canonical" href="https://lampo.ashray.xyz/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700;750&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+    <title>Lampo — LaTeX, now in real time.</title>
+  </head>
+  <body>
+    <div class="lp-site">
+      <div class="announcement" aria-label="Release announcement">
+        <span class="announcement__spark" aria-hidden="true">✳</span>
+        <span>Meet the new way to preview LaTeX.</span>
+        <span class="announcement__meta">OPEN SOURCE · VERSION 0.1</span>
       </div>
-    </div>
-    <aside class="hero__panel">
-      <p class="hero__panel-label">Ready for local testing</p>
-      <ul class="hero__signal-list">
-        <li>Native file watching and LaTeX builds.</li>
-        <li>Bundled PDF.js preview, no CDN.</li>
-        <li>Named PDF downloads in the browser.</li>
-      </ul>
-      <div class="hero__terminal">
-        <span># Build and install from source</span>
-        <span>$ git clone https://github.com/amxv/lampo</span>
-        <span>$ cd lampo</span>
-        <span>$ make install-local</span>
-        <span>$ lampo ~/projects/paper/main.tex</span>
-      </div>
-    </aside>
-  </section>
 
-  <section class="shell section-grid">
-    <div class="section-heading">
-      <p class="section-label">The idea</p>
-      <h2>The edit–compile–refresh loop should disappear.</h2>
-      <p>
-        Live previews are ordinary in web development. Lampo brings that same
-        effortless feedback loop to LaTeX, without a heavyweight editor or special workflow.
-      </p>
-    </div>
-    <div class="proof-grid">
-      {proofPoints.map((item) => (
-        <article class="proof-card">
-          <h3>{item.title}</h3>
-          <p>{item.body}</p>
-        </article>
-      ))}
-    </div>
-  </section>
+      <header class="lp-header" id="top">
+        <div class="lp-wrap lp-header__inner">
+          <a class="lp-brand" href="/" aria-label="Lampo home">
+            <span class="lp-brand__mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none"><path d="M18.1 2.3 5.8 18h9l-1.7 11.7L26.4 13h-9l.7-10.7Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="lp-brand__type">lampo<span class="lp-brand__dot">.</span></span>
+          </a>
 
-  <section class="shell split-section">
-    <div>
-      <p class="section-label">Workflow</p>
-      <h2>Small footprint. Fast feedback. A browser is all you need.</h2>
-    </div>
-    <div class="stack-list">
-      {workflows.map((item) => (
-        <article class="stack-list__item">
-          <p>{item}</p>
-        </article>
-      ))}
-    </div>
-  </section>
+          <nav class="lp-nav" aria-label="Main navigation">
+            <a href="#how-it-works">How it works</a>
+            <a href="#features">Features</a>
+            <a href="/docs">Docs</a>
+          </nav>
+          <a class="lp-header__github" href="https://github.com/amxv/lampo" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .9a11.1 11.1 0 0 0-3.5 21.6c.55.1.76-.24.76-.53v-1.87c-3.08.67-3.73-1.3-3.73-1.3-.5-1.29-1.23-1.63-1.23-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15.99 1.7 2.6 1.21 3.23.93.1-.72.39-1.21.71-1.49-2.46-.28-5.06-1.23-5.06-5.5 0-1.21.43-2.2 1.14-2.97-.11-.28-.49-1.4.11-2.92 0 0 .93-.3 3.05 1.13a10.54 10.54 0 0 1 5.56 0c2.12-1.44 3.05-1.13 3.05-1.13.61 1.52.23 2.64.12 2.92.71.77 1.14 1.76 1.14 2.97 0 4.28-2.6 5.21-5.08 5.49.4.35.77 1.02.77 2.06v3.06c0 .3.2.65.77.53A11.1 11.1 0 0 0 12 .9Z"/></svg>
+            <span>Star on GitHub</span>
+            <svg class="lp-external" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12 12 4M5 4h7v7"/></svg>
+          </a>
+        </div>
+      </header>
 
-  <section class="shell capability-band">
-    <div class="capability-band__intro">
-      <p class="section-label">Foundation in place</p>
-      <h2>Minimal dependencies, built for real work.</h2>
-    </div>
-    <div class="capability-band__grid">
-      <div>
-        <p class="capability-title">Go CLI</p>
-        <p>One native binary includes the HTTP server, filesystem watcher and browser UI.</p>
-      </div>
-      <div>
-        <p class="capability-title">npm distribution</p>
-        <p>Tag-driven native releases and an npm shim are ready for first publication.</p>
-      </div>
-      <div>
-        <p class="capability-title">Release pipeline</p>
-        <p>GitHub Actions for binaries, GitHub Releases, and npm publication from version tags.</p>
-      </div>
-      <div>
-        <p class="capability-title">Docs site</p>
-        <p>Astro and ZueDocs, with project notes hosted at lampo.ashray.xyz.</p>
-      </div>
-    </div>
-  </section>
+      <main>
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="lp-wrap hero__grid">
+            <div class="hero__copy">
+              <div class="hero__eyebrow entrance"><span class="hero__eyebrow-dot" aria-hidden="true"></span> THE INSTANT LATEX PREVIEW</div>
+              <h1 class="entrance entrance--one" id="hero-title">LaTeX, now <em>in real time.</em></h1>
+              <p class="hero__sub entrance entrance--two">Edit your <code>.tex</code> files. Watch the PDF update in your browser. No refresh, no fuss, just the kind of feedback loop you wish LaTeX always had.</p>
+              <div class="hero__actions entrance entrance--three">
+                <button class="install-command" type="button" data-copy={install} aria-label={`Copy ${install}`}>
+                  <span class="install-command__prompt">$</span>
+                  <span class="install-command__value">{install}</span>
+                  <span class="install-command__copy" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                  </span>
+                  <span class="install-command__feedback" aria-live="polite">Copy command</span>
+                </button>
+                <a class="hero__docs-link" href="/docs">Get started <span aria-hidden="true">↗</span></a>
+              </div>
+              <div class="hero__proof entrance entrance--four">
+                <span><span class="hero__proof-mark" aria-hidden="true">✓</span> Works with any editor</span>
+                <span><span class="hero__proof-mark" aria-hidden="true">✓</span> Runs on your machine</span>
+                <span><span class="hero__proof-mark" aria-hidden="true">✓</span> Free &amp; open source</span>
+              </div>
+            </div>
 
-  <section class="shell docs-teaser">
-    <div class="section-heading">
-      <p class="section-label">Documentation</p>
-      <h2>Everything you need to get started.</h2>
-      <p>
-        Learn how to run your own live preview, tune the compiler, and build Lampo from source.
-      </p>
-    </div>
-    <div class="docs-teaser__grid">
-      {docs.map((entry) => (
-        <a class="docs-teaser__card" href={`/docs/${entry.id}`}>
-          <span>{entry.data.category}</span>
-          <h3>{entry.data.title}</h3>
-          <p>{entry.data.summary ?? entry.data.description}</p>
-        </a>
-      ))}
-    </div>
-  </section>
+            <div class="hero__scene entrance entrance--scene" aria-label="Illustration of LaTeX source updating a PDF preview in Lampo">
+              <div class="hero__scene-grid" aria-hidden="true"></div>
+              <div class="demo-stamp"><span>WRITE.</span><span>PREVIEW.</span><span>DONE.</span></div>
+              <div class="demo-window">
+                <div class="demo-window__chrome">
+                  <div class="traffic-lights" aria-hidden="true"><i></i><i></i><i></i></div>
+                  <span class="demo-window__title">Your workspace, in sync.</span>
+                  <span class="demo-window__local"><span></span> localhost</span>
+                </div>
+                <div class="demo-window__workspace">
+                  <div class="demo-editor">
+                    <div class="demo-editor__tabs"><span class="demo-editor__tab is-active">paper.tex</span><span class="demo-editor__tab">notes.tex</span></div>
+                    <div class="demo-code" aria-hidden="true">
+                      <div><span>01</span><code><b>\documentclass</b>&#123;article&#125;</code></div>
+                      <div><span>02</span><code><b>\begin</b>&#123;document&#125;</code></div>
+                      <div><span>03</span><code>&nbsp;</code></div>
+                      <div><span>04</span><code><b>\title</b>&#123;The Shape</code></div>
+                      <div><span>05</span><code>&nbsp;&nbsp;of Ideas&#125;</code></div>
+                      <div><span>06</span><code><b>\maketitle</b></code></div>
+                      <div><span>07</span><code>&nbsp;</code></div>
+                      <div class="demo-code__live"><span>08</span><code><b>\section</b>&#123;Introduction&#125;<i></i></code></div>
+                      <div><span>09</span><code>The best work</code></div>
+                      <div><span>10</span><code>is in progress.</code></div>
+                      <div><span>11</span><code>&nbsp;</code></div>
+                      <div><span>12</span><code><b>\end</b>&#123;document&#125;</code></div>
+                    </div>
+                    <div class="demo-editor__foot"><span class="demo-editor__pulse"></span> Watching files…</div>
+                  </div>
 
-  <section class="shell closing-note">
-    <p>
-      Lampo is being tested before its first release. Try the source build and follow along on GitHub.
-    </p>
-  </section>
-</BaseLayout>
+                  <div class="demo-preview">
+                    <div class="demo-preview__toolbar"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg> paper.tex <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 5 5 5-5"/></svg></span><span class="demo-preview__updated"><i></i> Up to date</span></div>
+                    <div class="demo-preview__desk">
+                      <div class="demo-paper">
+                        <span class="demo-paper__kicker">A NOTE ON CREATING</span>
+                        <h2>The Shape<br />of Ideas</h2>
+                        <p class="demo-paper__byline">An evolving document · 2026</p>
+                        <hr />
+                        <h3>1. Introduction</h3>
+                        <p>Every good idea begins as a work in progress. The magic is in seeing it take shape, one small change at a time.</p>
+                        <div class="demo-paper__lines"><span></span><span></span><span></span><span></span></div>
+                        <span class="demo-paper__page">01</span>
+                      </div>
+                    </div>
+                    <div class="demo-preview__bottom"><span>1 page</span><span>Fit width</span><span>PDF ready ✓</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="demo-toast"><span class="demo-toast__bolt" aria-hidden="true">↗</span><span>Saved <strong>→</strong> already there.</span><span class="demo-toast__tick">✓</span></div>
+              <span class="demo-corner-label">FIG. 01 / YOUR NEW WORKFLOW</span>
+            </div>
+          </div>
+          <div class="lp-wrap hero__baseline"><span>AN ACTUAL BREATH OF FRESH AIR FOR <strong>.TEX</strong> FILES</span><span>SCROLL TO EXPLORE <span aria-hidden="true">↓</span></span></div>
+        </section>
+
+        <section class="transition-line" aria-label="The big idea"><div class="lp-wrap"><p>Your editor stays. <em>The waiting goes.</em></p><span aria-hidden="true">✳</span></div></section>
+
+        <section class="how section-space" id="how-it-works" aria-labelledby="how-title">
+          <div class="lp-wrap">
+            <div class="section-heading reveal"><div><p class="eyebrow">01 / THE WORKFLOW</p><h2 id="how-title">From source to <em>something real.</em></h2></div><p>Nothing new to learn. Nothing to migrate. Just your existing LaTeX project, only faster.</p></div>
+            <div class="step-grid">
+              {steps.map((step) => (
+                <article class="step-card reveal">
+                  <div class="step-card__top"><span class="step-card__number">{step.number}</span><span class="step-card__arrow" aria-hidden="true">↗</span></div>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                  <span class="step-card__note">{step.note}</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section class="features section-space" id="features" aria-labelledby="features-title">
+          <div class="lp-wrap">
+            <div class="section-heading section-heading--dark reveal"><div><p class="eyebrow">02 / THE GOOD STUFF</p><h2 id="features-title">Made for your <em>flow state.</em></h2></div><p>It's the little things that make writing feel effortless. We obsessed over those.</p></div>
+            <div class="feature-grid">
+              <article class="feature-card feature-card--live reveal">
+                <span class="feature-card__eyebrow">01 / NO MORE REFRESHING</span>
+                <div class="feature-card__animation" aria-hidden="true"><div class="feature-card__code"><span>\section&#123;Hello,</span><span>world.<span class="blinking-cursor">▍</span>&#125;</span></div><div class="feature-card__sync"><span>↝</span><span>LIVE</span></div><div class="feature-card__result">Hello, <em>world.</em></div></div>
+                <h3>The PDF keeps up.</h3><p>Save a file. See the change. The preview updates itself while you keep writing.</p>
+              </article>
+              <article class="feature-card feature-card--resize reveal">
+                <span class="feature-card__eyebrow">02 / PIXEL-PERFECT</span>
+                <div class="feature-card__sizes" aria-hidden="true"><div class="feature-card__size feature-card__size--large"><span></span><i></i><i></i><i></i><i></i></div><div class="feature-card__resize-arrows">↔</div><div class="feature-card__size feature-card__size--small"><span></span><i></i><i></i><i></i></div></div>
+                <h3>Sharp at every size.</h3><p>Fullscreen, split-screen, tiny window. Your text stays crisp, and resizing stays smooth.</p>
+              </article>
+              <article class="feature-card feature-card--switch reveal">
+                <span class="feature-card__eyebrow">03 / STAY ORGANIZED</span>
+                <div class="feature-switcher" aria-hidden="true"><div><span>▤</span> resume.tex <span class="feature-switcher__check">✓</span></div><div><span>▤</span> cover-letter.tex</div><div><span>▤</span> research/paper.tex</div></div>
+                <h3>One project. Many PDFs.</h3><p>Jump between standalone documents without opening another tab. Lampo remembers the last preview.</p>
+              </article>
+              <article class="feature-card feature-card--safe reveal">
+                <span class="feature-card__eyebrow">04 / MADE FOR REAL WORK</span>
+                <div class="feature-card__shield" aria-hidden="true"><span>⌁</span><div><strong>All good.</strong><small>Your previous preview stays visible, even when LaTeX needs a fix.</small></div></div>
+                <h3>No disappearing work.</h3><p>Compile error? Keep the last good PDF in view while you fix the source.</p>
+              </article>
+            </div>
+            <div class="features__footer"><span><i></i> Runs locally. No uploads, accounts or subscriptions.</span><span>YOUR FILES. YOUR MACHINE. YOUR FLOW.</span></div>
+          </div>
+        </section>
+
+        <section class="last-call" aria-labelledby="last-call-title">
+          <div class="lp-wrap last-call__inner">
+            <div class="last-call__glyph" aria-hidden="true">✳</div>
+            <p class="eyebrow">03 / LET'S GET WRITING</p>
+            <h2 id="last-call-title">Less compiling.<br /><em>More creating.</em></h2>
+            <p class="last-call__sub">One tiny tool between the source and the finished thing. Your next document is going to feel different.</p>
+            <div class="last-call__actions"><button class="install-command install-command--light" type="button" data-copy={install} aria-label={`Copy ${install}`}><span class="install-command__prompt">$</span><span class="install-command__value">{install}</span><span class="install-command__copy" aria-hidden="true">↗</span><span class="install-command__feedback" aria-live="polite">Copy command</span></button><a href="/docs">Read the 2-minute guide <span aria-hidden="true">↗</span></a></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="lp-footer"><div class="lp-wrap lp-footer__inner"><a class="lp-brand" href="/" aria-label="Lampo home"><span class="lp-brand__mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M18.1 2.3 5.8 18h9l-1.7 11.7L26.4 13h-9l.7-10.7Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><span class="lp-brand__type">lampo<span class="lp-brand__dot">.</span></span></a><span>Made for the joy of making things.</span><div><a href="/docs">Docs</a><a href="https://github.com/amxv/lampo" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="#top">Back to top ↑</a></div></div><div class="lp-wrap lp-footer__bottom"><span>© 2026 Lampo · Open source · Apache 2.0</span><span>A LITTLE LIGHTNING FOR YOUR LATEX.</span></div></footer>
+    </div>
+
+    <script is:inline>
+      (() => {
+        document.querySelectorAll('[data-copy]').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const label = button.querySelector('.install-command__feedback');
+            try {
+              await navigator.clipboard.writeText(button.dataset.copy);
+              label.textContent = 'Copied!';
+              button.classList.add('is-copied');
+              window.setTimeout(() => {
+                label.textContent = 'Copy command';
+                button.classList.remove('is-copied');
+              }, 1800);
+            } catch {
+              label.textContent = 'Text selected';
+              const selection = window.getSelection();
+              const range = document.createRange();
+              range.selectNodeContents(button.querySelector('.install-command__value'));
+              selection.removeAllRanges();
+              selection.addRange(range);
+              button.classList.add('is-copied');
+              window.setTimeout(() => {
+                label.textContent = 'Copy command';
+                button.classList.remove('is-copied');
+              }, 2200);
+            }
+          });
+        });
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+          const observer = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          }, { threshold: 0.08, rootMargin: '0px 0px 25px 0px' });
+          document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
+        } else {
+          document.querySelectorAll('.reveal').forEach((element) => element.classList.add('is-visible'));
+        }
+      })();
+    </script>
+  </body>
+</html>
