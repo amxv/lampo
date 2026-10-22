@@ -103,37 +103,53 @@ const steps = [
               </div>
             </div>
 
-            <div class="hero__scene entrance entrance--scene" aria-label="Illustration of LaTeX source updating a PDF preview in Lampo">
+            <div class="hero__scene entrance entrance--scene" aria-label="Illustration of an AI agent editing a LaTeX file in a separate chat, while Lampo shows the updated PDF beside it">
               <div class="hero__scene-grid" aria-hidden="true"></div>
               <div class="demo-stamp"><span>WRITE.</span><span>PREVIEW.</span><span>DONE.</span></div>
               <div class="demo-window">
                 <div class="demo-window__chrome">
                   <div class="traffic-lights" aria-hidden="true"><i></i><i></i><i></i></div>
-                  <span class="demo-window__title">Your workspace, in sync.</span>
+                  <span class="demo-window__title">Edit anywhere. Preview here.</span>
                   <span class="demo-window__local"><span></span> localhost</span>
                 </div>
                 <div class="demo-window__workspace">
-                  <div class="demo-editor">
-                    <div class="demo-editor__tabs"><span class="demo-editor__tab is-active">paper.tex</span><span class="demo-editor__tab">notes.tex</span></div>
-                    <div class="demo-code" aria-hidden="true">
-                      <div><span>01</span><code><b>\documentclass</b>&#123;article&#125;</code></div>
-                      <div><span>02</span><code><b>\begin</b>&#123;document&#125;</code></div>
-                      <div><span>03</span><code>&nbsp;</code></div>
-                      <div><span>04</span><code><b>\title</b>&#123;The Shape</code></div>
-                      <div><span>05</span><code>&nbsp;&nbsp;of Ideas&#125;</code></div>
-                      <div><span>06</span><code><b>\maketitle</b></code></div>
-                      <div><span>07</span><code>&nbsp;</code></div>
-                      <div class="demo-code__live"><span>08</span><code><b>\section</b>&#123;Introduction&#125;<i></i></code></div>
-                      <div><span>09</span><code>The best work</code></div>
-                      <div><span>10</span><code>is in progress.</code></div>
-                      <div><span>11</span><code>&nbsp;</code></div>
-                      <div><span>12</span><code><b>\end</b>&#123;document&#125;</code></div>
+                  <div class="demo-chat" aria-hidden="true">
+                    <div class="demo-chat__header">
+                      <span class="demo-chat__sparkle">✳</span>
+                      <span>AI agent</span>
+                      <span class="demo-chat__external">YOUR CHAT</span>
                     </div>
-                    <div class="demo-editor__foot"><span class="demo-editor__pulse"></span> Watching files…</div>
+                    <div class="demo-chat__messages">
+                      <div class="demo-chat__message demo-chat__message--user">
+                        <span class="demo-chat__bubble">Can you make the introduction shorter?</span>
+                      </div>
+                      <div class="demo-chat__message demo-chat__message--agent">
+                        <span class="demo-chat__agent-icon">✳</span>
+                        <p>Yes, I'll update it.</p>
+                      </div>
+                      <div class="demo-chat__message demo-chat__message--user">
+                        <span class="demo-chat__bubble">And make the title stand out a bit more.</span>
+                      </div>
+                      <div class="demo-chat__message demo-chat__message--agent">
+                        <span class="demo-chat__agent-icon">✳</span>
+                        <p>Done! I've saved the changes to <span class="demo-chat__filename">paper.tex</span>.</p>
+                      </div>
+                    </div>
+                    <div class="demo-chat__composer">
+                      <span>Message your agent…</span>
+                      <span class="demo-chat__send">↑</span>
+                    </div>
                   </div>
 
                   <div class="demo-preview">
-                    <div class="demo-preview__toolbar"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg> paper.tex <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 5 5 5-5"/></svg></span><span class="demo-preview__updated"><i></i> Up to date</span></div>
+                    <div class="demo-preview__toolbar">
+                      <span class="demo-preview__identity">
+                        <span class="demo-preview__brand"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11.6 1.2 3.8 11h5.6l-1 7.8 8-10.5h-5.6l.8-7.1Z"/></svg>Lampo</span>
+                        <span class="demo-preview__divider"></span>
+                        <span class="demo-preview__file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>paper.tex<svg class="demo-preview__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 5 5 5-5"/></svg></span>
+                      </span>
+                      <span class="demo-preview__updated"><i></i><span>Up to date</span></span>
+                    </div>
                     <div class="demo-preview__desk">
                       <div class="demo-paper">
                         <span class="demo-paper__kicker">A NOTE ON CREATING</span>
