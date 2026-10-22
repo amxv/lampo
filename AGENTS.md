@@ -94,3 +94,7 @@ Lampo includes:
 Before each release, update the changelog manually. Run checks and docs
 validation, commit and push the changelog, then push a `v*` tag only when the
 user has authorized the release. GitHub Actions publishes assets and npm.
+
+### Docs deployment
+
+The Docs GitHub Actions workflow deploys production only for the watched site paths; Vercel Git auto-deployments and `ignoreCommand` stay disabled. Keep the project-scoped `VERCEL_TOKEN` Actions secret and ID variables configured. Check Astro locally; builds run in CI.
