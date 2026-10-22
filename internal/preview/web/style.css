@@ -17,8 +17,8 @@ button:disabled { cursor: not-allowed; }
 button:focus-visible, input:focus-visible { outline: 2px solid #5b76c3; outline-offset: 2px; }
 [hidden] { display: none !important; }
 
-.app { display: grid; grid-template-rows: 59px minmax(0, 1fr) 32px; height: 100dvh; min-height: 250px; }
-.toolbar { z-index: 10; display: flex; gap: 20px; align-items: center; justify-content: space-between; padding: 0 21px; background: #fcfcfa; border-bottom: 1px solid #e2e3de; }
+.app { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 59px minmax(0, 1fr) 32px; height: 100dvh; min-height: 250px; }
+.toolbar { z-index: 10; display: flex; min-width: 0; gap: 20px; align-items: center; justify-content: space-between; padding: 0 21px; background: #fcfcfa; border-bottom: 1px solid #e2e3de; }
 .identity, .toolbar-center, .toolbar-actions { display: flex; align-items: center; }
 .identity { gap: 11px; flex: 1; min-width: 0; }
 .mark { color: #282924; width: 25px; height: 28px; display: grid; place-items: center; }
@@ -41,10 +41,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid #5b76c3; outline-
 .export-button:hover:not(:disabled) { background: #151712; }
 .export-button:disabled { background: #c9cbc4; border-color: #c9cbc4; box-shadow: none; }
 
-.content { display: flex; min-height: 0; flex-direction: column; position: relative; }
-.viewport { flex: 1; background: radial-gradient(ellipse 95% 70% at 50% 0%, #f4f4f1 0%, #edefec 100%); overflow: auto; overscroll-behavior: contain; scrollbar-color: #c7c9c1 transparent; }
+.content { display: flex; min-width: 0; min-height: 0; flex-direction: column; position: relative; }
+.viewport { flex: 1; min-width: 0; background: radial-gradient(ellipse 95% 70% at 50% 0%, #f4f4f1 0%, #edefec 100%); overflow: auto; overscroll-behavior: contain; scrollbar-color: #c7c9c1 transparent; }
 .pages { display: flex; flex-direction: column; align-items: center; gap: 25px; padding: 32px 30px 55px; min-height: 100%; }
 .pdf-page { background: #fff; position: relative; box-shadow: 0 3px 8px #252a2910, 0 15px 42px #252a2916; flex-shrink: 0; overflow: hidden; }
+.pdf-page-content { position: absolute; top: 0; left: 0; transform-origin: top left; }
 .pdf-page canvas { display: block; }
 .pdf-page .textLayer { position: absolute; inset: 0; overflow: hidden; opacity: 1; line-height: 1; text-size-adjust: none; forced-color-adjust: none; transform-origin: 0 0; z-index: 1; }
 .textLayer span, .textLayer br { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0 0; }

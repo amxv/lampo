@@ -23,8 +23,13 @@ let renderToken = 0;
 let renderTask = null;
 let customScale = null;
 let displayedScale = 1;
+let renderedPages = [];
 let renderFailure = "";
-let resizeTimer = null;
+let zoomRenderTimer = null;
+
+// A page rendered at this scale remains sharp at every fit-to-width size.
+// Resizing only changes CSS transforms; it never starts a PDF.js render.
+const maxFitScale = 1.55;
 
 function setStatus(status, message) {
   statusButton.className = `status status--${status}`;
@@ -101,41 +106,79 @@ async function loadPDF(revision) {
 
 function fitScale(pageWidth) {
   const margin = viewport.clientWidth <= 700 ? 24 : 64;
-  return Math.max(0.15, Math.min(1.55, (viewport.clientWidth - margin) / pageWidth));
+  return Math.max(0.15, Math.min(maxFitScale, (viewport.clientWidth - margin) / pageWidth));
+}
+
+// Keep the expensive canvas/text/annotation layers at their original render
+// resolution. The outer page takes up the *scaled* space in the document flow,
+// while one transform scales all inner layers together. This is cheap enough
+// to run on every browser resize frame, with no debounced PDF re-render.
+function layoutPages() {
+  if (!renderedPages.length) return;
+  const scale = customScale ?? fitScale(renderedPages[0].width);
+  const label = customScale == null ? "Fit width" : `${Math.round(scale * 100)}%`;
+  if ($("#zoom-value").textContent !== label) $("#zoom-value").textContent = label;
+  if (Math.abs(scale - displayedScale) < 0.0001) return;
+  displayedScale = scale;
+  for (const { frame, content, width, height, renderScale } of renderedPages) {
+    frame.style.width = `${width * scale}px`;
+    frame.style.height = `${height * scale}px`;
+    content.style.transform = `scale(${scale / renderScale})`;
+  }
+}
+
+function scheduleZoomRender() {
+  clearTimeout(zoomRenderTimer);
+  if (!pdfDocument || !renderedPages.length || displayedScale <= renderedPages[0].renderScale * 1.05) return;
+  // Zoom immediately using the existing bitmap, then sharpen once clicks stop.
+  zoomRenderTimer = setTimeout(() => {
+    if (pdfDocument && renderedPages.length && displayedScale > renderedPages[0].renderScale * 1.05) {
+      void renderPages();
+    }
+  }, 350);
 }
 
 async function renderPages(pdfDoc = pdfDocument) {
   if (!pdfDoc) return;
+  clearTimeout(zoomRenderTimer);
   const token = ++renderToken;
   if (renderTask) renderTask.cancel();
   const ratio = viewport.scrollTop / Math.max(1, viewport.scrollHeight - viewport.clientHeight);
   const staging = document.createDocumentFragment();
+  const newPages = [];
 
   try {
     const first = await pdfDoc.getPage(1);
     if (token !== renderToken) return;
-    const base = first.getViewport({ scale: 1 });
-    const scale = customScale ?? fitScale(base.width);
-    displayedScale = scale;
-    $("#zoom-value").textContent = customScale == null ? "Fit width" : `${Math.round(scale * 100)}%`;
+    const renderScale = Math.max(maxFitScale, customScale ?? 0);
     const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
     for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber++) {
       if (token !== renderToken) return;
       const page = pageNumber === 1 ? first : await pdfDoc.getPage(pageNumber);
-      const view = page.getViewport({ scale });
+      const view = page.getViewport({ scale: renderScale });
       const section = document.createElement("section");
       section.className = "pdf-page";
       section.setAttribute("aria-label", `Page ${pageNumber}`);
-      section.style.width = `${view.width}px`;
-      section.style.height = `${view.height}px`;
+      const content = document.createElement("div");
+      content.className = "pdf-page-content";
+      content.style.width = `${view.width}px`;
+      content.style.height = `${view.height}px`;
+      section.append(content);
+      newPages.push({
+        frame: section,
+        content,
+        width: view.width / renderScale,
+        height: view.height / renderScale,
+        renderScale,
+      });
 
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(view.width * pixelRatio);
       canvas.height = Math.round(view.height * pixelRatio);
       canvas.style.width = `${view.width}px`;
       canvas.style.height = `${view.height}px`;
-      section.append(canvas);
+      content.append(canvas);
       const context = canvas.getContext("2d", { alpha: false });
       if (!context) throw new Error("Canvas 2D rendering is unavailable");
       renderTask = page.render({
@@ -151,8 +194,8 @@ async function renderPages(pdfDoc = pdfDocument) {
       // Text remains selectable, while annotations preserve clickable links.
       const textLayer = document.createElement("div");
       textLayer.className = "textLayer";
-      textLayer.style.setProperty("--scale-factor", String(scale));
-      section.append(textLayer);
+      textLayer.style.setProperty("--scale-factor", String(renderScale));
+      content.append(textLayer);
       try {
         const layer = new pdfjs.TextLayer({
           textContentSource: page.streamTextContent(), container: textLayer, viewport: view,
@@ -186,7 +229,7 @@ async function renderPages(pdfDoc = pdfDocument) {
           anchor.style.height = `${Math.abs(y2 - y1)}px`;
           linkLayer.append(anchor);
         }
-        section.append(linkLayer);
+        content.append(linkLayer);
       } catch (error) {
         console.warn("Lampo: some links cannot be previewed", error);
       }
@@ -195,6 +238,11 @@ async function renderPages(pdfDoc = pdfDocument) {
 
     if (token !== renderToken) return;
     pages.replaceChildren(staging);
+    renderedPages = newPages;
+    // Force a layout update for the newly rendered document, even when its
+    // display scale matches the previous revision.
+    displayedScale = 0;
+    layoutPages();
     $("#page-count").textContent = `${pdfDoc.numPages} ${pdfDoc.numPages === 1 ? "page" : "pages"}`;
     viewport.scrollTop = ratio * Math.max(0, viewport.scrollHeight - viewport.clientHeight);
   } catch (error) {
@@ -209,20 +257,20 @@ async function renderPages(pdfDoc = pdfDocument) {
 
 function changeZoom(factor) {
   customScale = Math.max(0.25, Math.min(3, displayedScale * factor));
-  void renderPages();
+  layoutPages();
+  scheduleZoomRender();
 }
 
 $("#zoom-out").addEventListener("click", () => changeZoom(1 / 1.2));
 $("#zoom-in").addEventListener("click", () => changeZoom(1.2));
 $("#zoom-value").addEventListener("click", () => {
   customScale = null;
-  void renderPages();
+  clearTimeout(zoomRenderTimer);
+  layoutPages();
 });
 
 new ResizeObserver(() => {
-  if (customScale !== null || !pdfDocument) return;
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => void renderPages(), 100);
+  if (customScale === null) layoutPages();
 }).observe(viewport);
 
 function toggleLog(open) { logPanel.hidden = !open; }
@@ -266,7 +314,7 @@ document.addEventListener("keydown", (event) => {
   if (event.target instanceof HTMLInputElement || event.metaKey || event.ctrlKey || event.altKey) return;
   if (event.key === "+" || event.key === "=") changeZoom(1.2);
   if (event.key === "-") changeZoom(1 / 1.2);
-  if (event.key === "0") { customScale = null; void renderPages(); }
+  if (event.key === "0") { customScale = null; clearTimeout(zoomRenderTimer); layoutPages(); }
 });
 
 const events = new EventSource("/events");

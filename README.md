@@ -36,6 +36,7 @@ Lampo runs entirely on your machine: no account, uploads, SaaS, telemetry, CDN, 
 ## Built for fast iteration
 
 - **Fast change detection:** Native file events with a short debounce; detects updates to nested `.tex`, `.bib`, styles, images and other source assets, including atomic editor saves.
+- **Instant window resizing:** Pages fit the available space using CSS scaling of existing PDF layers; dragging a split-view divider doesn't trigger PDF.js re-rendering.
 - **No page reload:** Server-sent events notify the preview when a new PDF is ready. Your browser preserves the preview while the next build runs.
 - **Useful build errors:** Compiler error banner and log panel, without discarding the last good PDF.
 - **Browser controls:** Fit-to-width, zoom, selectable text, clickable external links, a page counter, and named PDF export.
