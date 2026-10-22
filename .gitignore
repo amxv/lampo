@@ -16,3 +16,5 @@ npm-debug.log*
 /docs/.astro/
 /docs/dist/
 /docs/.vercel/
+.vercel
+.env*.local
