@@ -16,7 +16,13 @@ Open your terminal and run:
 npm install -g @amxv/lampo
 ```
 
-You'll also need a LaTeX installation on your computer, such as MacTeX, TeX Live, TinyTeX, or MiKTeX. If you can already compile your `.tex` files locally, you're probably set.
+If you've never installed LaTeX, install a distribution with `latexmk` and `pdflatex`:
+
+- **macOS:** `brew install --cask mactex-no-gui` (MacTeX, without extra GUI apps).
+- **Windows:** Install MiKTeX (`winget install --id MiKTeX.MiKTeX -e`) and Strawberry Perl (`winget install --id StrawberryPerl.StrawberryPerl -e`), then add `latexmk` in MiKTeX Console.
+- **Linux (Ubuntu/Debian):** `sudo apt install texlive-latex-recommended texlive-latex-extra latexmk` (TeX Live).
+
+Open a new terminal after installing LaTeX so its commands are on your PATH. If you can already compile `.tex` files with `latexmk`, you're set.
 
 > Not using npm? Download a binary for your computer from the [GitHub Releases page](https://github.com/amxv/lampo/releases), or see the [CLI reference](/docs/command-reference) for other install options.
 

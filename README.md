@@ -8,7 +8,13 @@ Lampo is a tiny local CLI that shows your LaTeX PDF in a browser and updates it 
 
 ## Get started
 
-You need a LaTeX installation with `latexmk` and `pdflatex` (MacTeX, TeX Live, TinyTeX, or MiKTeX).
+New to LaTeX? Install a distribution with `latexmk` and `pdflatex` before running Lampo:
+
+- **macOS:** `brew install --cask mactex-no-gui` (MacTeX, without extra GUI apps).
+- **Windows:** Install MiKTeX (`winget install --id MiKTeX.MiKTeX -e`) and Strawberry Perl (`winget install --id StrawberryPerl.StrawberryPerl -e`), then add `latexmk` in MiKTeX Console.
+- **Linux (Ubuntu/Debian):** `sudo apt install texlive-latex-recommended texlive-latex-extra latexmk` (TeX Live).
+
+Open a new terminal after installing LaTeX so its commands are on your PATH.
 
 ```bash
 npm install -g @amxv/lampo
